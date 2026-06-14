@@ -33,7 +33,8 @@ cp infra/docker/.env.example infra/docker/.env
 cd infra/docker && docker compose up -d
 
 # 3. Bootstrap Keycloak realm (first time only)
-KEYCLOAK_URL=http://localhost:8080 services/identity/scripts/bootstrap-realm.sh
+# Requires: 127.0.0.1 keycloak.gxp.localhost in /etc/hosts (Traefik routes port 80 → keycloak:8080)
+KEYCLOAK_URL=http://keycloak.gxp.localhost services/identity/scripts/bootstrap-realm.sh
 
 # 4. Install frontend dependencies
 pnpm install

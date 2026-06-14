@@ -3,7 +3,7 @@
 # Run once after Keycloak is up: ./bootstrap-realm.sh
 set -euo pipefail
 
-KEYCLOAK_URL="${KEYCLOAK_URL:-http://localhost:8080}"
+KEYCLOAK_URL="${KEYCLOAK_URL:-http://keycloak.gxp.localhost}"
 ADMIN_USER="${KEYCLOAK_ADMIN:-admin}"
 ADMIN_PASS="${KEYCLOAK_ADMIN_PASSWORD:-changeme_dev}"
 REALM_FILE="$(dirname "$0")/../realm-export.json"

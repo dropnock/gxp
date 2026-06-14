@@ -209,7 +209,8 @@ docker compose ps   # all should show "healthy" or "running"
 ### 3. Bootstrap Keycloak (first time only)
 
 ```bash
-KEYCLOAK_URL=http://localhost:8080 services/identity/scripts/bootstrap-realm.sh
+# Requires 127.0.0.1 keycloak.gxp.localhost in /etc/hosts
+KEYCLOAK_URL=http://keycloak.gxp.localhost services/identity/scripts/bootstrap-realm.sh
 ```
 
 Creates the `gxp-platform` realm and service account clients.
