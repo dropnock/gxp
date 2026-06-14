@@ -1,0 +1,19 @@
+[bandit]
+# Exclude test files and migrations — they have intentional patterns that
+# would generate noise (e.g., hardcoded credentials in fixtures, raw SQL in migrations).
+exclude_dirs = [
+    "*/tests/*",
+    "*/test_*",
+    "*/*_test.py",
+    "*/db/migrations/*",
+    "*/.venv/*",
+    "*/node_modules/*",
+]
+
+# Skip low-severity / informational issues in CI; address them in dev.
+# B101: assert usage in tests is intentional
+# B311: random — acceptable for non-cryptographic IDs (we use secrets module for secrets)
+skips = ["B101", "B311"]
+
+severity = "medium"
+confidence = "medium"

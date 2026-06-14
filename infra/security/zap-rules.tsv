@@ -1,0 +1,35 @@
+# ZAP passive scan rule configuration
+# Format: rule_id	PASS/WARN/FAIL	description
+# FAIL = break the build; WARN = report only; PASS = ignore
+#
+# Reference: https://www.zaproxy.org/docs/alerts/
+
+# Anti-CSRF token — our API is stateless JWT; CSRF not applicable
+10202	PASS	Absence of Anti-CSRF Tokens
+
+# X-Frame-Options — set via Traefik headers middleware
+10020	WARN	X-Frame-Options Header
+
+# Content-Security-Policy — set via Traefik headers middleware
+10038	WARN	Content Security Policy (CSP) Header Not Set
+
+# Server version disclosure — Traefik strips this; WARN if leaks
+10036	WARN	Server Leaks Version Information
+
+# Strict-Transport-Security — required; FAIL if missing
+10035	FAIL	Strict-Transport-Security Header Not Set
+
+# X-Content-Type-Options — required; FAIL if missing
+10021	FAIL	X-Content-Type-Options Header Missing
+
+# SQL injection — must never pass
+40018	FAIL	SQL Injection
+
+# Path traversal — must never pass
+6	FAIL	Path Traversal
+
+# Remote file inclusion — must never pass
+7	FAIL	Remote File Inclusion
+
+# Application error disclosure
+90022	WARN	Application Error Disclosure

@@ -1,0 +1,177 @@
+name: Security Scanning
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+  schedule:
+    # Daily at 03:00 UTC for continuous vulnerability monitoring
+    - cron: "0 3 * * *"
+
+jobs:
+  # ── Trivy image vulnerability scan ─────────────────────────────────────────
+  trivy:
+    name: Trivy (${{ matrix.service }})
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        service:
+          - app-service
+          - audit-service
+          - case-service
+          - document-service
+          - tenant-service
+          - workflow-service
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Build image
+        run: docker build -t gxp/${{ matrix.service }}:scan services/${{ matrix.service }}/
+
+      - name: Trivy scan
+        uses: aquasecurity/trivy-action@master
+        with:
+          image-ref: gxp/${{ matrix.service }}:scan
+          format: sarif
+          output: trivy-${{ matrix.service }}.sarif
+          severity: CRITICAL,HIGH
+          exit-code: "1"
+          ignore-unfixed: true
+
+      - name: Upload Trivy SARIF
+        uses: github/codeql-action/upload-sarif@v3
+        if: always()
+        with:
+          sarif_file: trivy-${{ matrix.service }}.sarif
+          category: trivy-${{ matrix.service }}
+
+  # ── Bandit SAST ─────────────────────────────────────────────────────────────
+  bandit:
+    name: Bandit SAST
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: astral-sh/setup-uv@v4
+      - run: uv tool install bandit
+      - name: Run Bandit
+        run: |
+          uv tool run bandit \
+            --recursive \
+            --configfile bandit.toml \
+            --format sarif \
+            --output bandit.sarif \
+            services/ packages/
+        continue-on-error: true
+      - uses: github/codeql-action/upload-sarif@v3
+        if: always()
+        with:
+          sarif_file: bandit.sarif
+          category: bandit
+
+  # ── Semgrep SAST ────────────────────────────────────────────────────────────
+  semgrep:
+    name: Semgrep SAST
+    runs-on: ubuntu-latest
+    container:
+      image: semgrep/semgrep
+    steps:
+      - uses: actions/checkout@v4
+      - name: Run Semgrep
+        run: |
+          semgrep \
+            --config p/python \
+            --config p/owasp-top-ten \
+            --config p/jwt \
+            --config p/secrets \
+            --sarif \
+            --output semgrep.sarif \
+            services/ packages/
+        env:
+          SEMGREP_APP_TOKEN: ${{ secrets.SEMGREP_APP_TOKEN }}
+        continue-on-error: true
+      - uses: github/codeql-action/upload-sarif@v3
+        if: always()
+        with:
+          sarif_file: semgrep.sarif
+          category: semgrep
+
+  # ── pip-audit (Python dependency CVEs) ─────────────────────────────────────
+  pip-audit:
+    name: pip-audit
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: astral-sh/setup-uv@v4
+      - run: uv tool install pip-audit
+      - name: Audit Python dependencies
+        run: uv tool run pip-audit --requirement <(uv export --frozen --no-emit-project) --format json --output pip-audit.json
+        continue-on-error: true
+      - name: Display results
+        if: always()
+        run: |
+          if [ -f pip-audit.json ]; then
+            python3 -c "
+          import json, sys
+          data = json.load(open('pip-audit.json'))
+          vulns = [d for d in data.get('dependencies', []) if d.get('vulns')]
+          if vulns:
+              print(f'VULNERABLE PACKAGES: {len(vulns)}')
+              for dep in vulns:
+                  for v in dep['vulns']:
+                      print(f'  {dep[\"name\"]} {dep[\"version\"]}: {v[\"id\"]} ({v[\"fix_versions\"]})')
+              sys.exit(1)
+          else:
+              print('No vulnerabilities found.')
+          "
+          fi
+
+  # ── pnpm audit (JS dependency CVEs) ────────────────────────────────────────
+  pnpm-audit:
+    name: pnpm audit
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: pnpm/action-setup@v4
+        with:
+          version: 9
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+          cache: pnpm
+      - run: pnpm install --frozen-lockfile
+      - name: Audit JS dependencies
+        run: pnpm audit --audit-level=high
+        continue-on-error: true
+
+  # ── OWASP ZAP baseline scan ─────────────────────────────────────────────────
+  zap:
+    name: OWASP ZAP Baseline
+    runs-on: ubuntu-latest
+    if: github.event_name == 'schedule' || github.ref == 'refs/heads/main'
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Start GXP dev stack
+        run: |
+          cd infra/docker
+          cp .env.example .env
+          docker compose up -d --wait
+        timeout-minutes: 10
+        continue-on-error: true
+
+      - name: OWASP ZAP baseline scan
+        uses: zaproxy/action-baseline@v0.12.0
+        with:
+          target: "http://localhost/api/v1"
+          rules_file_name: infra/security/zap-rules.tsv
+          cmd_options: "-I -z '-config scanner.maxDepth=3'"
+          fail_action: false
+
+      - name: Upload ZAP report
+        uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: zap-report
+          path: report_html.html

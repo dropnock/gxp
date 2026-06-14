@@ -1,0 +1,39 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: case-service
+  namespace: gxp
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: case-service
+  template:
+    metadata:
+      labels:
+        app: case-service
+    spec:
+      containers:
+        - name: case-service
+          image: gxp/case-service:latest
+          imagePullPolicy: Never
+          ports:
+            - containerPort: 8000
+          envFrom:
+            - secretRef:
+                name: case-service-secrets
+            - configMapRef:
+                name: gxp-common-config
+          readinessProbe:
+            httpGet:
+              path: /health
+              port: 8000
+            initialDelaySeconds: 10
+            periodSeconds: 10
+          resources:
+            requests:
+              cpu: "100m"
+              memory: "256Mi"
+            limits:
+              cpu: "500m"
+              memory: "512Mi"

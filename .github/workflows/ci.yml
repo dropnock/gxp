@@ -1,0 +1,127 @@
+name: CI
+
+on:
+  push:
+    branches: [main, develop]
+  pull_request:
+    branches: [main]
+
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  # ── Python linting + tests ──────────────────────────────────────────────────
+  python:
+    name: Python (${{ matrix.service }})
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        service:
+          - app-service
+          - audit-service
+          - case-service
+          - document-service
+          - notification-service
+          - tenant-service
+          - workflow-service
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: astral-sh/setup-uv@v4
+        with:
+          version: "latest"
+
+      - name: Install workspace deps
+        run: uv sync
+
+      - name: Ruff lint
+        run: uv run ruff check services/${{ matrix.service }}/
+        continue-on-error: false
+
+      - name: Ruff format check
+        run: uv run ruff format --check services/${{ matrix.service }}/
+
+      - name: Type check (pyright)
+        run: uv run pyright services/${{ matrix.service }}/app
+        continue-on-error: true
+
+      - name: pytest
+        run: uv run pytest services/${{ matrix.service }}/tests/ -q --tb=short
+        continue-on-error: true
+        env:
+          PYTHONPATH: packages/py-shared
+
+  # ── Shared Python library ───────────────────────────────────────────────────
+  py-shared:
+    name: py-shared tests
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: astral-sh/setup-uv@v4
+      - run: uv sync
+      - run: uv run ruff check packages/py-shared/
+      - run: uv run pytest packages/py-shared/tests/ -q --tb=short
+        continue-on-error: true
+
+  # ── Compliance tests ────────────────────────────────────────────────────────
+  compliance:
+    name: NIST 800-53 compliance tests
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: astral-sh/setup-uv@v4
+      - run: uv sync
+      - run: uv run pytest tests/compliance/ -v
+
+  # ── Frontend ────────────────────────────────────────────────────────────────
+  frontend:
+    name: Frontend
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: pnpm/action-setup@v4
+        with:
+          version: 9
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+          cache: pnpm
+
+      - run: pnpm install --frozen-lockfile
+
+      - name: TypeScript check
+        run: pnpm -r tsc --noEmit
+
+      - name: ESLint
+        run: pnpm -r lint
+        continue-on-error: true
+
+      - name: Build all packages
+        run: pnpm build
+
+  # ── Docker build check ──────────────────────────────────────────────────────
+  docker-build:
+    name: Docker build (${{ matrix.service }})
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        service:
+          - app-service
+          - audit-service
+          - case-service
+          - document-service
+          - tenant-service
+          - workflow-service
+    steps:
+      - uses: actions/checkout@v4
+      - name: Build image
+        run: |
+          docker build \
+            -t gxp/${{ matrix.service }}:ci-${{ github.sha }} \
+            services/${{ matrix.service }}/

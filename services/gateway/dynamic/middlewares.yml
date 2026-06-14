@@ -1,0 +1,28 @@
+http:
+  middlewares:
+    # JWT validation via Keycloak JWKS — applied to all API routes
+    # In prod, replace with a ForwardAuth service or Traefik JWT plugin
+    jwt-auth:
+      forwardAuth:
+        address: "http://auth-checker:9000/verify"
+        authResponseHeaders:
+          - "X-User-Id"
+          - "X-User-Roles"
+          - "X-Request-Id"
+
+    # Secure headers for all responses
+    secure-headers:
+      headers:
+        frameDeny: true
+        contentTypeNosniff: true
+        browserXssFilter: true
+        referrerPolicy: "strict-origin-when-cross-origin"
+        customResponseHeaders:
+          X-Powered-By: ""
+          Server: ""
+
+    # Rate limiting
+    rate-limit:
+      rateLimit:
+        average: 100
+        burst: 50
