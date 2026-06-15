@@ -207,7 +207,8 @@ services:
       test: ["CMD-SHELL", "curl -sf http://localhost:9998/tika || exit 1"]
       interval: 30s
       timeout: 10s
-      retries: 3
+      retries: 10
+      start_period: 120s
 
   # ── Application Services ──────────────────────────────────────────────────────
 
