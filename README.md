@@ -195,10 +195,39 @@ Open `infra/docker/.env` and set `GXP_DOMAIN`:
 | Environment | `GXP_DOMAIN` value | DNS required |
 |---|---|---|
 | Local (browser on same machine) | `gxp.localhost` | Add to `/etc/hosts`: `127.0.0.1 portal.gxp.localhost api.gxp.localhost keycloak.gxp.localhost runtime.gxp.localhost` |
-| Test server (external clients, no public DNS) | `<SERVER_IP>.nip.io` e.g. `192-168-1-100.nip.io` | None — nip.io resolves all subdomains to the embedded IP automatically |
+| Test server (managed domain) | `local.dropnock.com` | See DNS records below |
+| Test server (no managed domain) | `<SERVER_IP>.nip.io` e.g. `192-168-1-100.nip.io` | None — nip.io resolves all subdomains to the embedded IP automatically |
 | Production | `gxp.agency.gov` | Wildcard DNS: `*.gxp.agency.gov → server IP` |
 
 Also change all `changeme_dev` secrets before deploying anywhere non-local.
+
+### DNS records (managed domain)
+
+Create these records in your DNS provider, all pointing to the test/production server's IP. A single wildcard record is the simplest option.
+
+**Option A — Wildcard (recommended, covers future subdomains automatically):**
+
+| Host | Type | Value |
+|---|---|---|
+| `*.local.dropnock.com` | A | `<server-IP>` |
+
+**Option B — Explicit records:**
+
+| Host | Type | Value | Purpose |
+|---|---|---|---|
+| `portal.local.dropnock.com` | A | `<server-IP>` | Staff portal |
+| `runtime.local.dropnock.com` | A | `<server-IP>` | Published app renderer |
+| `api.local.dropnock.com` | A | `<server-IP>` | All backend API services |
+| `keycloak.local.dropnock.com` | A | `<server-IP>` | Keycloak OIDC + admin UI |
+
+MinIO (`:9001`) and the Traefik dashboard (`:8080`) are reached directly by IP:port and need no DNS record.
+
+After DNS propagates, set `GXP_DOMAIN=local.dropnock.com` in `.env` and rebuild the frontend containers so the Keycloak and API URLs bake in correctly:
+
+```bash
+cd infra/docker
+docker compose up -d --build portal runtime
+```
 
 ### 2. Start the full stack
 
