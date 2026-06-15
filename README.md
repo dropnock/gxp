@@ -188,47 +188,55 @@ services/<name>/
 ```bash
 git clone <repo-url> gxp && cd gxp
 cp infra/docker/.env.example infra/docker/.env
-# Edit infra/docker/.env — change all `changeme_dev` values before deploying anywhere non-local
 ```
 
-### 2. Start the full dev stack
+Open `infra/docker/.env` and set `GXP_DOMAIN`:
+
+| Environment | `GXP_DOMAIN` value | DNS required |
+|---|---|---|
+| Local (browser on same machine) | `gxp.localhost` | Add to `/etc/hosts`: `127.0.0.1 portal.gxp.localhost api.gxp.localhost keycloak.gxp.localhost runtime.gxp.localhost` |
+| Test server (external clients, no public DNS) | `<SERVER_IP>.nip.io` e.g. `192-168-1-100.nip.io` | None — nip.io resolves all subdomains to the embedded IP automatically |
+| Production | `gxp.agency.gov` | Wildcard DNS: `*.gxp.agency.gov → server IP` |
+
+Also change all `changeme_dev` secrets before deploying anywhere non-local.
+
+### 2. Start the full stack
 
 ```bash
 cd infra/docker
 docker compose up -d
 ```
 
-This starts: Traefik, PostgreSQL ×6, Keycloak, MinIO, Valkey, OpenSearch, ClamAV, Apache Tika, and all application services + Celery workers.
-
-Wait for services to become healthy (≈60 s on first run while images pull):
+This starts: Traefik, PostgreSQL ×6, Keycloak, MinIO, Valkey, OpenSearch, ClamAV, Apache Tika, all backend services + Celery workers, and the portal + runtime frontends built into nginx containers.
 
 ```bash
-docker compose ps   # all should show "healthy" or "running"
+docker compose ps   # all should reach "healthy" or "running" within ~60 s
 ```
 
 ### 3. Bootstrap Keycloak (first time only)
 
 ```bash
-# Requires 127.0.0.1 keycloak.gxp.localhost in /etc/hosts
-KEYCLOAK_URL=http://keycloak.gxp.localhost services/identity/scripts/bootstrap-realm.sh
+KEYCLOAK_URL=http://keycloak.${GXP_DOMAIN} services/identity/scripts/bootstrap-realm.sh
 ```
 
 Creates the `gxp-platform` realm and service account clients.
 
-### 4. Install frontend dependencies
+### 4. Open the portal
+
+```
+http://portal.<GXP_DOMAIN>
+```
+
+### Frontend hot-reload dev mode (local only)
 
 ```bash
 pnpm install
+pnpm --filter @gxp/portal dev   # http://localhost:3000
 ```
 
-### 5. Start the portal
+The Vite dev server binds `0.0.0.0:3000`, so it is also reachable at `http://<host-ip>:3000` from other machines on the same network.
 
-```bash
-pnpm --filter @gxp/portal dev
-# Portal available at http://localhost:5173
-```
-
-### Running a service outside Docker (for fast iteration)
+### Running a backend service outside Docker (fast iteration)
 
 ```bash
 uv sync
@@ -238,21 +246,29 @@ uvicorn app.main:app --reload --port 8001
 
 ---
 
-## Service Endpoints (dev)
+## Service Endpoints
 
-All services are exposed through Traefik at `http://api.gxp.localhost`. Add `127.0.0.1 api.gxp.localhost keycloak.gxp.localhost` to `/etc/hosts` (or use the domain as-is if your system resolves `.localhost`).
+All hostnames are subdomains of `GXP_DOMAIN` and are routed by Traefik on port 80.
 
-| Service | Route prefix | Internal port |
+| Service | URL | Notes |
 |---|---|---|
-| tenant-service | `/api/v1/tenants` | 8000 |
-| app-service | `/api/v1/apps` | 8000 |
-| workflow-service | `/api/v1/workflow` | 8000 |
-| case-service | `/api/v1/cases` | 8000 |
-| document-service | `/api/v1/documents` | 8000 |
-| audit-service | `/api/v1/audit` | 8000 |
-| Keycloak | `keycloak.gxp.localhost` | 8080 |
-| MinIO console | `localhost:9001` | — |
-| Traefik dashboard | `localhost:8080` | — |
+| Portal | `http://portal.<GXP_DOMAIN>` | Staff-facing SPA |
+| Runtime | `http://runtime.<GXP_DOMAIN>` | Published app renderer |
+| API (all services) | `http://api.<GXP_DOMAIN>/api/v1/...` | See route prefixes below |
+| Keycloak | `http://keycloak.<GXP_DOMAIN>` | OIDC / admin UI |
+| MinIO console | `http://<server>:9001` | Direct port — not proxied |
+| Traefik dashboard | `http://<server>:8080` | Dev only |
+
+API route prefixes:
+
+| Service | Route prefix |
+|---|---|
+| tenant-service | `/api/v1/tenants` |
+| app-service | `/api/v1/apps` |
+| workflow-service | `/api/v1/workflow` |
+| case-service | `/api/v1/cases` |
+| document-service | `/api/v1/documents` |
+| audit-service | `/api/v1/audit` |
 
 ---
 

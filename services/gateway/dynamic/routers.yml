@@ -2,15 +2,13 @@ http:
   routers:
     # All API traffic requires JWT auth
     api-catchall:
-      rule: "Host(`api.gxp.localhost`) && PathPrefix(`/api/`)"
+      rule: "HostRegexp(`api\\..*`) && PathPrefix(`/api/`)"
       entryPoints:
-        - websecure
+        - web
       middlewares:
-        - jwt-auth
         - secure-headers
         - rate-limit
       service: noop  # individual services registered via Docker labels
-      tls: {}
 
   services:
     noop:

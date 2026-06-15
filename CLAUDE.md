@@ -26,21 +26,29 @@ See `/home/dropnock/.claude/plans/playful-tinkering-cupcake.md` for the full arc
 ## Dev Quick Start
 
 ```bash
-# 1. Copy env file
+# 1. Copy env file and set GXP_DOMAIN
 cp infra/docker/.env.example infra/docker/.env
+# Local: keep GXP_DOMAIN=gxp.localhost and add to /etc/hosts:
+#   127.0.0.1  portal.gxp.localhost api.gxp.localhost keycloak.gxp.localhost runtime.gxp.localhost
+# Test server (external clients, no DNS): set GXP_DOMAIN=<SERVER_IP>.nip.io in .env
 
-# 2. Start the full dev stack
+# 2. Start the full dev stack (includes portal + runtime containers)
 cd infra/docker && docker compose up -d
 
 # 3. Bootstrap Keycloak realm (first time only)
-# Requires: 127.0.0.1 keycloak.gxp.localhost in /etc/hosts (Traefik routes port 80 → keycloak:8080)
 KEYCLOAK_URL=http://keycloak.gxp.localhost services/identity/scripts/bootstrap-realm.sh
+# On a test server: KEYCLOAK_URL=http://keycloak.<SERVER_IP>.nip.io ...
 
-# 4. Install frontend dependencies
+# 4. Access the portal
+# Local:       http://portal.gxp.localhost
+# Test server: http://portal.<SERVER_IP>.nip.io
+```
+
+### Frontend dev mode (hot-reload, local only)
+
+```bash
 pnpm install
-
-# 5. Start the portal in dev mode
-pnpm --filter @gxp/portal dev
+pnpm --filter @gxp/portal dev   # http://localhost:3000 (also reachable at http://<host-ip>:3000)
 ```
 
 ## Python Services
