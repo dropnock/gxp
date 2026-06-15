@@ -111,8 +111,8 @@ The portal has no server-side env vars. Runtime configuration is baked in at bui
 | Setting | Location | Default |
 |---|---|---|
 | Dev server port | `vite.config.ts` | `3000` |
-| API proxy target | `vite.config.ts` | `http://localhost:8000` |
-| Keycloak URL | `src/shared/auth/keycloak.ts` | `http://keycloak.gxp.localhost` |
+| API proxy target | `vite.config.ts` | `https://localhost:8000` |
+| Keycloak URL | `src/shared/auth/keycloak.ts` | `https://keycloak.gxp.localhost` |
 
 For production, set `VITE_KEYCLOAK_URL` and `VITE_API_BASE_URL` before running `pnpm build`.
 

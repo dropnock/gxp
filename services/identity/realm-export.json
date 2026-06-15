@@ -40,9 +40,9 @@
       "directAccessGrantsEnabled": false,
       "pkceCodeChallengeMethod": "S256",
       "redirectUris": [
-        "http://platform.gxp.localhost/*",
-        "https://platform.gxp.localhost/*",
-        "http://localhost:5173/*"
+        "https://platform.{gxp_domain}/*",
+        "http://localhost:5173/*",
+        "http://localhost:3000/*"
       ],
       "webOrigins": ["+"]
     },

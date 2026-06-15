@@ -43,8 +43,10 @@
       "directAccessGrantsEnabled": false,
       "pkceCodeChallengeMethod": "S256",
       "redirectUris": [
-        "https://{tenant_slug}.portal.gxp.internal/*",
-        "http://{tenant_slug}.portal.gxp.localhost/*"
+        "https://portal.{gxp_domain}/*",
+        "https://{tenant_slug}.portal.{gxp_domain}/*",
+        "http://localhost:5173/*",
+        "http://localhost:3000/*"
       ],
       "webOrigins": ["+"]
     },
@@ -56,8 +58,8 @@
       "standardFlowEnabled": true,
       "pkceCodeChallengeMethod": "S256",
       "redirectUris": [
-        "https://{tenant_slug}.apps.gxp.internal/*",
-        "http://{tenant_slug}.apps.gxp.localhost/*"
+        "https://runtime.{gxp_domain}/*",
+        "https://{tenant_slug}.apps.{gxp_domain}/*"
       ],
       "webOrigins": ["+"]
     },
@@ -102,7 +104,7 @@
   "smtpServer": {
     "host": "localhost",
     "port": "25",
-    "from": "noreply@gxp.internal",
+    "from": "noreply@{gxp_domain}",
     "fromDisplayName": "GXP Platform"
   }
 }

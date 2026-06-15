@@ -28,6 +28,7 @@ services:
       - ../../services/gateway/traefik.yml:/etc/traefik/traefik.yml:ro
       - ../../services/gateway/dynamic:/etc/traefik/dynamic:ro
       - /var/run/docker.sock:/var/run/docker.sock:ro
+      - ./certs:/etc/traefik/certs:ro
     networks:
       - gxp-net
 
@@ -132,8 +133,7 @@ services:
     volumes:
       - minio-data:/data
     ports:
-      - "9000:9000"
-      - "9001:9001"
+      - "9000:9000"   # S3 API — used by SDKs and mc CLI
     networks:
       - gxp-net
     healthcheck:
@@ -141,6 +141,12 @@ services:
       interval: 10s
       timeout: 5s
       retries: 5
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.routers.minio-console.rule=Host(`minio.${GXP_DOMAIN:-gxp.localhost}`)"
+      - "traefik.http.routers.minio-console.entrypoints=websecure"
+      - "traefik.http.routers.minio-console.tls=true"
+      - "traefik.http.services.minio-console.loadbalancer.server.port=9001"
 
   keycloak:
     image: quay.io/keycloak/keycloak:26.0
@@ -156,6 +162,7 @@ services:
       KC_HOSTNAME: keycloak.${GXP_DOMAIN:-gxp.localhost}
       KC_HOSTNAME_STRICT: "false"
       KC_HTTP_ENABLED: "true"
+      KC_PROXY_HEADERS: "xforwarded"
     volumes:
       - ../../services/identity/realm-export.json:/opt/keycloak/data/import/realm-export.json:ro
       - ../../services/identity/themes/gxp:/opt/keycloak/themes/gxp:ro
@@ -167,6 +174,8 @@ services:
     labels:
       - "traefik.enable=true"
       - "traefik.http.routers.keycloak.rule=Host(`keycloak.${GXP_DOMAIN:-gxp.localhost}`)"
+      - "traefik.http.routers.keycloak.entrypoints=websecure"
+      - "traefik.http.routers.keycloak.tls=true"
       - "traefik.http.services.keycloak.loadbalancer.server.port=8080"
 
   opensearch:
@@ -249,6 +258,8 @@ services:
     labels:
       - "traefik.enable=true"
       - "traefik.http.routers.tenant-service.rule=Host(`api.${GXP_DOMAIN:-gxp.localhost}`) && PathPrefix(`/api/v1/tenants`)"
+      - "traefik.http.routers.tenant-service.entrypoints=websecure"
+      - "traefik.http.routers.tenant-service.tls=true"
       - "traefik.http.services.tenant-service.loadbalancer.server.port=8000"
 
   tenant-worker:
@@ -317,6 +328,8 @@ services:
     labels:
       - "traefik.enable=true"
       - "traefik.http.routers.app-service.rule=Host(`api.${GXP_DOMAIN:-gxp.localhost}`) && PathPrefix(`/api/v1/apps`)"
+      - "traefik.http.routers.app-service.entrypoints=websecure"
+      - "traefik.http.routers.app-service.tls=true"
       - "traefik.http.services.app-service.loadbalancer.server.port=8000"
 
   workflow-service:
@@ -342,6 +355,8 @@ services:
     labels:
       - "traefik.enable=true"
       - "traefik.http.routers.workflow-service.rule=Host(`api.${GXP_DOMAIN:-gxp.localhost}`) && PathPrefix(`/api/v1/workflow`)"
+      - "traefik.http.routers.workflow-service.entrypoints=websecure"
+      - "traefik.http.routers.workflow-service.tls=true"
       - "traefik.http.services.workflow-service.loadbalancer.server.port=8000"
 
   workflow-worker:
@@ -411,6 +426,8 @@ services:
     labels:
       - "traefik.enable=true"
       - "traefik.http.routers.case-service.rule=Host(`api.${GXP_DOMAIN:-gxp.localhost}`) && PathPrefix(`/api/v1/cases`)"
+      - "traefik.http.routers.case-service.entrypoints=websecure"
+      - "traefik.http.routers.case-service.tls=true"
       - "traefik.http.services.case-service.loadbalancer.server.port=8000"
 
   document-service:
@@ -445,6 +462,8 @@ services:
     labels:
       - "traefik.enable=true"
       - "traefik.http.routers.document-service.rule=Host(`api.${GXP_DOMAIN:-gxp.localhost}`) && PathPrefix(`/api/v1/documents`)"
+      - "traefik.http.routers.document-service.entrypoints=websecure"
+      - "traefik.http.routers.document-service.tls=true"
       - "traefik.http.services.document-service.loadbalancer.server.port=8000"
 
   document-worker:
@@ -503,6 +522,8 @@ services:
     labels:
       - "traefik.enable=true"
       - "traefik.http.routers.audit-service.rule=Host(`api.${GXP_DOMAIN:-gxp.localhost}`) && PathPrefix(`/api/v1/audit`)"
+      - "traefik.http.routers.audit-service.entrypoints=websecure"
+      - "traefik.http.routers.audit-service.tls=true"
       - "traefik.http.services.audit-service.loadbalancer.server.port=8000"
 
   audit-worker:
@@ -577,15 +598,16 @@ services:
       context: ../..
       dockerfile: apps/portal/Dockerfile
       args:
-        VITE_KEYCLOAK_URL: http://keycloak.${GXP_DOMAIN:-gxp.localhost}
-        VITE_API_BASE_URL: http://api.${GXP_DOMAIN:-gxp.localhost}
+        VITE_KEYCLOAK_URL: https://keycloak.${GXP_DOMAIN:-gxp.localhost}
+        VITE_API_BASE_URL: https://api.${GXP_DOMAIN:-gxp.localhost}
     restart: unless-stopped
     networks:
       - gxp-net
     labels:
       - "traefik.enable=true"
       - "traefik.http.routers.portal.rule=Host(`portal.${GXP_DOMAIN:-gxp.localhost}`)"
-      - "traefik.http.routers.portal.entrypoints=web"
+      - "traefik.http.routers.portal.entrypoints=websecure"
+      - "traefik.http.routers.portal.tls=true"
       - "traefik.http.services.portal.loadbalancer.server.port=80"
 
   runtime:
@@ -593,14 +615,15 @@ services:
       context: ../..
       dockerfile: apps/runtime/Dockerfile
       args:
-        VITE_API_BASE_URL: http://api.${GXP_DOMAIN:-gxp.localhost}
+        VITE_API_BASE_URL: https://api.${GXP_DOMAIN:-gxp.localhost}
     restart: unless-stopped
     networks:
       - gxp-net
     labels:
       - "traefik.enable=true"
       - "traefik.http.routers.runtime.rule=Host(`runtime.${GXP_DOMAIN:-gxp.localhost}`)"
-      - "traefik.http.routers.runtime.entrypoints=web"
+      - "traefik.http.routers.runtime.entrypoints=websecure"
+      - "traefik.http.routers.runtime.tls=true"
       - "traefik.http.services.runtime.loadbalancer.server.port=80"
 
 networks:

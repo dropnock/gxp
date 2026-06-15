@@ -66,9 +66,14 @@ async def _create_keycloak_realm(slug: str, name: str, realm_name: str) -> None:
     template["realm"] = realm_name
     template["displayName"] = name
 
-    # Substitute {tenant_slug} and {tenant_name} in all string values
+    # Substitute {tenant_slug}, {tenant_name}, and {gxp_domain} in all string values
     template_str = json.dumps(template)
-    template_str = template_str.replace("{tenant_slug}", slug).replace("{tenant_name}", name)
+    template_str = (
+        template_str
+        .replace("{tenant_slug}", slug)
+        .replace("{tenant_name}", name)
+        .replace("{gxp_domain}", settings.gxp_domain)
+    )
     realm_payload = json.loads(template_str)
 
     conn = KeycloakOpenIDConnection(

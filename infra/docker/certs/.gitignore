@@ -1,0 +1,6 @@
+# TLS certificate files — generated locally, never committed
+*.crt
+*.key
+*.pem
+*.p12
+*.pfx

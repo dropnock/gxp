@@ -29,19 +29,23 @@ See `/home/dropnock/.claude/plans/playful-tinkering-cupcake.md` for the full arc
 # 1. Copy env file and set GXP_DOMAIN
 cp infra/docker/.env.example infra/docker/.env
 # Local: keep GXP_DOMAIN=gxp.localhost and add to /etc/hosts:
-#   127.0.0.1  portal.gxp.localhost api.gxp.localhost keycloak.gxp.localhost runtime.gxp.localhost
+#   127.0.0.1  portal.gxp.localhost api.gxp.localhost keycloak.gxp.localhost runtime.gxp.localhost minio.gxp.localhost
 # Test server (external clients, no DNS): set GXP_DOMAIN=<SERVER_IP>.nip.io in .env
 
-# 2. Start the full dev stack (includes portal + runtime containers)
+# 2. Generate TLS certificates (first time only — skip if you already have a signed cert)
+infra/scripts/gen-certs.sh
+# Import infra/docker/certs/tls.crt into your OS/browser trust store to avoid warnings.
+
+# 3. Start the full dev stack (includes portal + runtime containers)
 cd infra/docker && docker compose up -d
 
-# 3. Bootstrap Keycloak realm (first time only)
-KEYCLOAK_URL=http://keycloak.gxp.localhost services/identity/scripts/bootstrap-realm.sh
-# On a test server: KEYCLOAK_URL=http://keycloak.<SERVER_IP>.nip.io ...
+# 4. Bootstrap Keycloak realm (first time only)
+KEYCLOAK_URL=https://keycloak.gxp.localhost services/identity/scripts/bootstrap-realm.sh
+# On a test server: KEYCLOAK_URL=https://keycloak.<SERVER_IP>.nip.io ...
 
-# 4. Access the portal
-# Local:       http://portal.gxp.localhost
-# Test server: http://portal.<SERVER_IP>.nip.io
+# 5. Access the portal
+# Local:       https://portal.gxp.localhost
+# Test server: https://portal.<SERVER_IP>.nip.io
 ```
 
 ### Frontend dev mode (hot-reload, local only)

@@ -9,9 +9,12 @@ api:
 entryPoints:
   web:
     address: ":80"
-  # websecure is unused in dev — no TLS certificates are configured.
-  # In production, replace this block with a real cert resolver (e.g. ACME / Let's Encrypt
-  # or a mounted certificate) and re-enable the HTTP→HTTPS redirect on the web entrypoint.
+    http:
+      redirections:
+        entryPoint:
+          to: websecure
+          scheme: https
+          permanent: true
   websecure:
     address: ":443"
 

@@ -34,6 +34,9 @@ class Settings(BaseSettings):
     valkey_url: str = "redis://localhost:6379/6"
     celery_broker_url: str = "redis://localhost:6379/6"
 
+    # Platform domain — drives Keycloak redirect URIs injected into tenant realm templates
+    gxp_domain: str = "gxp.localhost"
+
     # JWT validation for platform realm
     keycloak_realm: str = "gxp-platform"
     client_id: str = "gxp-tenant-service"

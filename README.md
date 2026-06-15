@@ -194,7 +194,7 @@ Open `infra/docker/.env` and set `GXP_DOMAIN`:
 
 | Environment | `GXP_DOMAIN` value | DNS required |
 |---|---|---|
-| Local (browser on same machine) | `gxp.localhost` | Add to `/etc/hosts`: `127.0.0.1 portal.gxp.localhost api.gxp.localhost keycloak.gxp.localhost runtime.gxp.localhost` |
+| Local (browser on same machine) | `gxp.localhost` | Add to `/etc/hosts`: `127.0.0.1 portal.gxp.localhost api.gxp.localhost keycloak.gxp.localhost runtime.gxp.localhost minio.gxp.localhost` |
 | Test server (managed domain) | `local.dropnock.com` | See DNS records below |
 | Test server (no managed domain) | `<SERVER_IP>.nip.io` e.g. `192-168-1-100.nip.io` | None — nip.io resolves all subdomains to the embedded IP automatically |
 | Production | `gxp.agency.gov` | Wildcard DNS: `*.gxp.agency.gov → server IP` |
@@ -220,7 +220,7 @@ Create these records in your DNS provider, all pointing to the test/production s
 | `api.local.dropnock.com` | A | `<server-IP>` | All backend API services |
 | `keycloak.local.dropnock.com` | A | `<server-IP>` | Keycloak OIDC + admin UI |
 
-MinIO (`:9001`) and the Traefik dashboard (`:8080`) are reached directly by IP:port and need no DNS record.
+The Traefik dashboard (`:8080`) is reached directly by IP:port and needs no DNS record. The MinIO console is served at `minio.<GXP_DOMAIN>` through Traefik on HTTPS.
 
 After DNS propagates, set `GXP_DOMAIN=local.dropnock.com` in `.env` and rebuild the frontend containers so the Keycloak and API URLs bake in correctly:
 
@@ -229,7 +229,17 @@ cd infra/docker
 docker compose up -d --build portal runtime
 ```
 
-### 2. Start the full stack
+### 2. Generate TLS certificates (first time only)
+
+```bash
+infra/scripts/gen-certs.sh
+```
+
+This generates a self-signed wildcard certificate for `*.GXP_DOMAIN` and places it in `infra/docker/certs/`. To remove the browser "Not secure" warning, import `infra/docker/certs/tls.crt` as a trusted CA (instructions are printed by the script).
+
+To use a CA-signed certificate instead, place your `.crt` and `.key` files at `infra/docker/certs/tls.crt` / `infra/docker/certs/tls.key` — the script skips generation if the files already exist.
+
+### 3. Start the full stack
 
 ```bash
 cd infra/docker
@@ -242,18 +252,18 @@ This starts: Traefik, PostgreSQL ×6, Keycloak, MinIO, Valkey, OpenSearch, ClamA
 docker compose ps   # all should reach "healthy" or "running" within ~60 s
 ```
 
-### 3. Bootstrap Keycloak (first time only)
+### 4. Bootstrap Keycloak (first time only)
 
 ```bash
-KEYCLOAK_URL=http://keycloak.${GXP_DOMAIN} services/identity/scripts/bootstrap-realm.sh
+KEYCLOAK_URL=https://keycloak.${GXP_DOMAIN} services/identity/scripts/bootstrap-realm.sh
 ```
 
 Creates the `gxp-platform` realm and service account clients.
 
-### 4. Open the portal
+### 5. Open the portal
 
 ```
-http://portal.<GXP_DOMAIN>
+https://portal.<GXP_DOMAIN>
 ```
 
 ### Frontend hot-reload dev mode (local only)
@@ -263,7 +273,7 @@ pnpm install
 pnpm --filter @gxp/portal dev   # http://localhost:3000
 ```
 
-The Vite dev server binds `0.0.0.0:3000`, so it is also reachable at `http://<host-ip>:3000` from other machines on the same network.
+The Vite dev server binds `0.0.0.0:3000` on plain HTTP (browsers allow HTTP on localhost). When proxying to backend services, set `VITE_API_BASE_URL=https://api.<GXP_DOMAIN>` in your local `.env`.
 
 ### Running a backend service outside Docker (fast iteration)
 
@@ -277,16 +287,17 @@ uvicorn app.main:app --reload --port 8001
 
 ## Service Endpoints
 
-All hostnames are subdomains of `GXP_DOMAIN` and are routed by Traefik on port 80.
+All hostnames are subdomains of `GXP_DOMAIN` and are routed by Traefik on port 443 (HTTPS). Port 80 redirects to HTTPS.
 
 | Service | URL | Notes |
 |---|---|---|
-| Portal | `http://portal.<GXP_DOMAIN>` | Staff-facing SPA |
-| Runtime | `http://runtime.<GXP_DOMAIN>` | Published app renderer |
-| API (all services) | `http://api.<GXP_DOMAIN>/api/v1/...` | See route prefixes below |
-| Keycloak | `http://keycloak.<GXP_DOMAIN>` | OIDC / admin UI |
-| MinIO console | `http://<server>:9001` | Direct port — not proxied |
-| Traefik dashboard | `http://<server>:8080` | Dev only |
+| Portal | `https://portal.<GXP_DOMAIN>` | Staff-facing SPA |
+| Runtime | `https://runtime.<GXP_DOMAIN>` | Published app renderer |
+| API (all services) | `https://api.<GXP_DOMAIN>/api/v1/...` | See route prefixes below |
+| Keycloak | `https://keycloak.<GXP_DOMAIN>` | OIDC / admin UI |
+| MinIO console | `https://minio.<GXP_DOMAIN>` | Routed through Traefik |
+| MinIO S3 API | `http://<server>:9000` | Direct port for SDK/CLI use |
+| Traefik dashboard | `http://<server>:8080` | Dev only — HTTP on localhost |
 
 API route prefixes:
 
@@ -312,7 +323,7 @@ Tenants map to government agencies. Each tenant gets:
 **Provision a new tenant:**
 
 ```bash
-curl -X POST http://api.gxp.localhost/api/v1/tenants \
+curl -X POST https://api.gxp.localhost/api/v1/tenants \
   -H "Authorization: Bearer $PLATFORM_TOKEN" \
   -H "Content-Type: application/json" \
   -d '{"slug": "dot", "name": "Dept of Transportation"}'

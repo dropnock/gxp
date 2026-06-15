@@ -34,7 +34,7 @@ function resolveRealm(): string {
   return "gxp-platform";
 }
 
-const keycloakUrl = import.meta.env.VITE_KEYCLOAK_URL ?? "http://keycloak.gxp.localhost";
+const keycloakUrl = import.meta.env.VITE_KEYCLOAK_URL ?? "https://keycloak.gxp.localhost";
 
 export const keycloak = new Keycloak({
   url: keycloakUrl,

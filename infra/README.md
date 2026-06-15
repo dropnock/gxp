@@ -47,7 +47,7 @@ Services started by `docker compose up -d` in `infra/docker/`:
 | `postgres-{svc}` ×6 | postgres:16-alpine | One DB per service |
 | `postgres-keycloak` | postgres:16-alpine | Keycloak DB |
 | `valkey` | valkey/valkey:8-alpine | Cache + message broker |
-| `minio` | minio/minio:… | Object storage (API :9000, console :9001) |
+| `minio` | minio/minio:… | Object storage (S3 API :9000 direct; console via Traefik at `minio.<GXP_DOMAIN>`) |
 | `keycloak` | quay.io/keycloak/keycloak:26.0 | Identity provider |
 | `opensearch` | opensearchproject/opensearch:2.18.0 | Full-text search |
 | `clamav` | clamav/clamav:1.4 | Virus scanning |
@@ -66,6 +66,9 @@ All containers share the `gxp-net` bridge network.
 cp infra/docker/.env.example infra/docker/.env
 # Edit .env — change all changeme_dev values
 
+# Generate TLS certificates (first time only)
+infra/scripts/gen-certs.sh
+
 cd infra/docker
 docker compose up -d
 
@@ -73,7 +76,7 @@ docker compose up -d
 docker compose ps
 
 # First-time Keycloak bootstrap
-KEYCLOAK_URL=http://localhost:8080 services/identity/scripts/bootstrap-realm.sh
+KEYCLOAK_URL=https://keycloak.gxp.localhost services/identity/scripts/bootstrap-realm.sh
 ```
 
 ---

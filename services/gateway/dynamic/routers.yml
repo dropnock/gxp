@@ -4,11 +4,12 @@ http:
     api-catchall:
       rule: "HostRegexp(`api\\..*`) && PathPrefix(`/api/`)"
       entryPoints:
-        - web
+        - websecure
       middlewares:
         - secure-headers
         - rate-limit
-      service: noop  # individual services registered via Docker labels
+      service: noop
+      tls: {}
 
   services:
     noop:
