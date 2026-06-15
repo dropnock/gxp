@@ -4,7 +4,7 @@ WORKDIR /app
 RUN corepack enable
 
 # Install dependencies
-COPY package.json pnpm-workspace.yaml turbo.json ./
+COPY package.json pnpm-lock.yaml pnpm-workspace.yaml turbo.json ./
 COPY packages/ts-shared/package.json packages/ts-shared/
 COPY apps/portal/package.json apps/portal/
 RUN pnpm install --frozen-lockfile
