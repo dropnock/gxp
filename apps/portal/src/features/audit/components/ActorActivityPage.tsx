@@ -3,7 +3,6 @@ import { useActorActivity } from "../hooks/useAudit";
 
 export function ActorActivityPage() {
   const [actorInput, setActorInput] = useState("");
-  const [actorId, setActorId] = useState<string | null>(null);
   const [since, setSince] = useState(() => {
     const d = new Date();
     d.setDate(d.getDate() - 30);

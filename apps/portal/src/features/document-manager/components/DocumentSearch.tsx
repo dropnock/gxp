@@ -20,7 +20,7 @@ export function DocumentSearch() {
 
       {results && results.length > 0 && (
         <div style={resultsStyle}>
-          {(results as Array<{ document_id: string; name: string; score: number; mime_type?: string }>).map((r) => (
+          {results.map((r) => (
             <div key={r.document_id} style={resultItemStyle}>
               <span style={{ fontWeight: 500 }}>{r.name}</span>
               <span style={{ fontSize: 12, color: "#888", marginLeft: 8 }}>{r.mime_type}</span>
@@ -30,7 +30,7 @@ export function DocumentSearch() {
         </div>
       )}
 
-      {results?.length === 0 && query.length > 1 && !isFetching && (
+      {results !== undefined && results.length === 0 && query.length > 1 && !isFetching && (
         <p style={{ fontSize: 12, color: "#888", margin: "4px 0" }}>No results for "{query}"</p>
       )}
     </div>

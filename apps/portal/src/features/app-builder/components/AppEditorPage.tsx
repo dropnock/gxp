@@ -19,7 +19,6 @@ export function AppEditorPage() {
 
   const { data: app, isLoading: appLoading } = useApp(id ?? null);
   const { data: pages = [], isLoading: pagesLoading } = useAppPages(id ?? null);
-  const updateApp = useUpdateApp(id ?? "");
   const upsertPage = useUpsertPage(id ?? "");
   const deletePage = useDeletePage(id ?? "");
   const submitReview = useSubmitReview();

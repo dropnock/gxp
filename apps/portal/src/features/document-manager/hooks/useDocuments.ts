@@ -150,13 +150,20 @@ export function useDeleteDocument() {
 
 // ── Search ────────────────────────────────────────────────────────────────────
 
+export interface SearchResult {
+  document_id: string;
+  name: string;
+  score: number;
+  mime_type?: string;
+}
+
 export function useDocumentSearch(query: string, tags?: string[]) {
   const params = new URLSearchParams({ q: query });
   if (tags?.length) params.set("tags", tags.join(","));
 
-  return useQuery({
+  return useQuery<SearchResult[]>({
     queryKey: ["document-search", query, tags],
-    queryFn: () => apiFetch(`${BASE}/search?${params}`),
+    queryFn: () => apiFetch<SearchResult[]>(`${BASE}/search?${params}`),
     enabled: query.length > 1,
   });
 }

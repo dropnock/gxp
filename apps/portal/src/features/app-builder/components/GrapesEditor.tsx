@@ -9,7 +9,6 @@
  * and can retrieve the full project JSON via the `getProject()` handle.
  */
 import { forwardRef, useEffect, useImperativeHandle, useRef } from "react";
-// @ts-expect-error no bundled types
 import grapesjs from "grapesjs";
 
 export interface GrapesEditorHandle {

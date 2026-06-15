@@ -9,7 +9,7 @@
 import { useEffect, useRef, useImperativeHandle, forwardRef } from "react";
 
 // bpmn-js ships as CJS/UMD — import the modeler entry point.
-// @ts-expect-error no bundled types in all versions
+// eslint-disable-next-line @typescript-eslint/no-require-imports
 import BpmnModeler from "bpmn-js/lib/Modeler";
 
 export interface BpmnEditorHandle {
@@ -40,7 +40,7 @@ const EMPTY_DIAGRAM = `<?xml version="1.0" encoding="UTF-8"?>
 </bpmn:definitions>`;
 
 const BpmnEditor = forwardRef<BpmnEditorHandle, Props>(function BpmnEditor(
-  { xml, onChange, readOnly = false },
+  { xml, onChange, readOnly: _readOnly = false },
   ref
 ) {
   const containerRef = useRef<HTMLDivElement>(null);

@@ -30,7 +30,6 @@ export function useActorActivity(actorId: string | null, since?: string, until?:
   if (since) params.set("since", since);
   if (until) params.set("until", until);
   params.set("limit", "200");
-  const qs = params.toString() ? `?${params}` : "";
   return useQuery({
     queryKey: ["audit-actor", actorId, since, until],
     queryFn: () => apiFetch(`${BASE}/reports/actor-activity?actor_id=${actorId}&${params}`, token!),

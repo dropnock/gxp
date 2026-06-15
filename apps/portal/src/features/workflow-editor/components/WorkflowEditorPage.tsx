@@ -2,7 +2,7 @@
  * Top-level layout for the workflow editor feature.
  * Sub-routes are handled here; the parent App.tsx renders /workflows/* to this component.
  */
-import { NavLink, Routes, Route, useNavigate } from "react-router-dom";
+import { NavLink, Routes, Route } from "react-router-dom";
 import { DefinitionList } from "./bpmn/DefinitionList";
 import { DefinitionEditorPage } from "./bpmn/DefinitionEditorPage";
 import { InstanceList } from "./instances/InstanceList";
