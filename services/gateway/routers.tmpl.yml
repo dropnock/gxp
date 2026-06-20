@@ -8,17 +8,17 @@ http:
 
     # Uncomment each block as its service is brought up
 
-    # portal:
-    #   rule: "Host(`portal.${GXP_DOMAIN}`)"
-    #   entryPoints: [websecure]
-    #   tls: {}
-    #   service: portal
+    portal:
+      rule: "Host(`portal.${GXP_DOMAIN}`)"
+      entryPoints: [websecure]
+      tls: {}
+      service: portal
 
-    # runtime:
-    #   rule: "Host(`runtime.${GXP_DOMAIN}`)"
-    #   entryPoints: [websecure]
-    #   tls: {}
-    #   service: runtime
+    runtime:
+      rule: "Host(`runtime.${GXP_DOMAIN}`)"
+      entryPoints: [websecure]
+      tls: {}
+      service: runtime
 
     minio-console:
       rule: "Host(`minio.${GXP_DOMAIN}`)"
@@ -81,15 +81,15 @@ http:
         servers:
           - url: "http://keycloak:8080"
 
-    # portal:
-    #   loadBalancer:
-    #     servers:
-    #       - url: "http://portal:80"
+    portal:
+      loadBalancer:
+        servers:
+          - url: "http://portal:80"
 
-    # runtime:
-    #   loadBalancer:
-    #     servers:
-    #       - url: "http://runtime:80"
+    runtime:
+      loadBalancer:
+        servers:
+          - url: "http://runtime:80"
 
     minio-console:
       loadBalancer:
