@@ -527,25 +527,24 @@ services:
     networks:
       - gxp-net
 
-  # notification-service:
-  #   build:
-  #     context: ../..
-  #     dockerfile: services/notification-service/Dockerfile
-  #   restart: unless-stopped
-  #   environment:
-  #     <<: *common-env
-  #     VALKEY_URL: redis://:${VALKEY_PASSWORD}@valkey:6379/5
-  #     KEYCLOAK_URL: http://keycloak:8080
-  #     KEYCLOAK_REALM: gxp
-  #     CLIENT_ID: gxp-notification-service
-  #     CLIENT_SECRET: ${NOTIFICATION_SERVICE_CLIENT_SECRET}
-  #     SMTP_HOST: "localhost"
-  #     SMTP_PORT: "25"
-  #   depends_on:
-  #     valkey:
-  #       condition: service_healthy
-  #   networks:
-  #     - gxp-net
+  notification-service:
+    build:
+      context: ../..
+      dockerfile: services/notification-service/Dockerfile
+    restart: unless-stopped
+    environment:
+      <<: *common-env
+      VALKEY_URL: redis://:${VALKEY_PASSWORD}@valkey:6379/5
+      KEYCLOAK_URL: http://keycloak:8080
+      CLIENT_ID: gxp-notification-service
+      CLIENT_SECRET: ${NOTIFICATION_SERVICE_CLIENT_SECRET}
+      SMTP_HOST: "localhost"
+      SMTP_PORT: "25"
+    depends_on:
+      valkey:
+        condition: service_healthy
+    networks:
+      - gxp-net
 
   # ── Frontend apps ─────────────────────────────────────────────────────────────
 

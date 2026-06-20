@@ -68,6 +68,13 @@ http:
       tls: {}
       service: audit-service
 
+    notification-service:
+      rule: "Host(`api.${GXP_DOMAIN}`) && PathPrefix(`/api/v1/notifications`)"
+      entryPoints: [websecure]
+      middlewares: [secure-headers, rate-limit]
+      tls: {}
+      service: notification-service
+
   services:
     keycloak:
       loadBalancer:
@@ -118,3 +125,8 @@ http:
       loadBalancer:
         servers:
           - url: "http://audit-service:8000"
+
+    notification-service:
+      loadBalancer:
+        servers:
+          - url: "http://notification-service:8000"
