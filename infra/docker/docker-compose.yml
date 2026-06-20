@@ -53,16 +53,16 @@ services:
   #   networks:
   #     - gxp-net
 
-  # postgres-tenant:
-  #   <<: *postgres-common
-  #   environment:
-  #     POSTGRES_DB: gxp_tenant
-  #     POSTGRES_USER: postgres
-  #     POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
-  #   volumes:
-  #     - postgres-tenant-data:/var/lib/postgresql/data
-  #   networks:
-  #     - gxp-net
+  postgres-tenant:
+    <<: *postgres-common
+    environment:
+      POSTGRES_DB: gxp_tenant
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+    volumes:
+      - postgres-tenant-data:/var/lib/postgresql/data
+    networks:
+      - gxp-net
 
   # postgres-case:
   #   <<: *postgres-common
@@ -217,85 +217,78 @@ services:
 
   # ── Application Services ──────────────────────────────────────────────────────
 
-  # tenant-service:
-  #   build:
-  #     context: ../..
-  #     dockerfile: services/tenant-service/Dockerfile
-  #   restart: unless-stopped
-  #   environment:
-  #     <<: *common-env
-  #     DATABASE_URL: postgresql+asyncpg://postgres:${POSTGRES_PASSWORD}@postgres-tenant:5432/gxp_tenant
-  #     APP_SERVICE_DB_URL: postgresql+asyncpg://postgres:${POSTGRES_PASSWORD}@postgres-app:5432/gxp_apps
-  #     WORKFLOW_SERVICE_DB_URL: postgresql+asyncpg://postgres:${POSTGRES_PASSWORD}@postgres-workflow:5432/gxp_workflow
-  #     CASE_SERVICE_DB_URL: postgresql+asyncpg://postgres:${POSTGRES_PASSWORD}@postgres-case:5432/gxp_case
-  #     DOCUMENT_SERVICE_DB_URL: postgresql+asyncpg://postgres:${POSTGRES_PASSWORD}@postgres-document:5432/gxp_documents
-  #     AUDIT_SERVICE_DB_URL: postgresql+asyncpg://postgres:${POSTGRES_PASSWORD}@postgres-audit:5432/gxp_audit
-  #     KEYCLOAK_URL: http://keycloak:8080
-  #     KEYCLOAK_ADMIN_USERNAME: ${KEYCLOAK_ADMIN}
-  #     KEYCLOAK_ADMIN_PASSWORD: ${KEYCLOAK_ADMIN_PASSWORD}
-  #     MINIO_ENDPOINT: minio:9000
-  #     MINIO_ACCESS_KEY: ${MINIO_ROOT_USER}
-  #     MINIO_SECRET_KEY: ${MINIO_ROOT_PASSWORD}
-  #     OPENSEARCH_URL: http://opensearch:9200
-  #     VALKEY_URL: redis://:${VALKEY_PASSWORD}@valkey:6379/6
-  #     KEYCLOAK_REALM: gxp-platform
-  #     CLIENT_ID: gxp-tenant-service
-  #     CLIENT_SECRET: ${TENANT_SERVICE_CLIENT_SECRET}
-  #   depends_on:
-  #     postgres-tenant:
-  #       condition: service_healthy
-  #     valkey:
-  #       condition: service_healthy
-  #     keycloak:
-  #       condition: service_started
-  #   networks:
-  #     - gxp-net
-  #   labels:
-  #     - "traefik.enable=true"
-  #     - "traefik.http.routers.tenant-service.rule=Host(`api.${GXP_DOMAIN:-gxp.localhost}`) && PathPrefix(`/api/v1/tenants`)"
-  #     - "traefik.http.routers.tenant-service.entrypoints=websecure"
-  #     - "traefik.http.routers.tenant-service.tls=true"
-  #     - "traefik.http.services.tenant-service.loadbalancer.server.port=8000"
+  tenant-service:
+    build:
+      context: ../..
+      dockerfile: services/tenant-service/Dockerfile
+    restart: unless-stopped
+    environment:
+      <<: *common-env
+      DATABASE_URL: postgresql+asyncpg://postgres:${POSTGRES_PASSWORD}@postgres-tenant:5432/gxp_tenant
+      APP_SERVICE_DB_URL: postgresql+asyncpg://postgres:${POSTGRES_PASSWORD}@postgres-app:5432/gxp_apps
+      WORKFLOW_SERVICE_DB_URL: postgresql+asyncpg://postgres:${POSTGRES_PASSWORD}@postgres-workflow:5432/gxp_workflow
+      CASE_SERVICE_DB_URL: postgresql+asyncpg://postgres:${POSTGRES_PASSWORD}@postgres-case:5432/gxp_case
+      DOCUMENT_SERVICE_DB_URL: postgresql+asyncpg://postgres:${POSTGRES_PASSWORD}@postgres-document:5432/gxp_documents
+      AUDIT_SERVICE_DB_URL: postgresql+asyncpg://postgres:${POSTGRES_PASSWORD}@postgres-audit:5432/gxp_audit
+      KEYCLOAK_URL: http://keycloak:8080
+      KEYCLOAK_ADMIN_USERNAME: ${KEYCLOAK_ADMIN}
+      KEYCLOAK_ADMIN_PASSWORD: ${KEYCLOAK_ADMIN_PASSWORD}
+      MINIO_ENDPOINT: minio:9000
+      MINIO_ACCESS_KEY: ${MINIO_ROOT_USER}
+      MINIO_SECRET_KEY: ${MINIO_ROOT_PASSWORD}
+      VALKEY_URL: redis://:${VALKEY_PASSWORD}@valkey:6379/6
+      KEYCLOAK_REALM: gxp-platform
+      CLIENT_ID: gxp-tenant-service
+      CLIENT_SECRET: ${TENANT_SERVICE_CLIENT_SECRET}
+    depends_on:
+      postgres-tenant:
+        condition: service_healthy
+      valkey:
+        condition: service_healthy
+      keycloak:
+        condition: service_started
+    networks:
+      - gxp-net
 
-  # tenant-worker:
-  #   build:
-  #     context: ../..
-  #     dockerfile: services/tenant-service/Dockerfile
-  #   restart: unless-stopped
-  #   command: ["celery", "-A", "worker.celery_app", "worker", "--loglevel=info", "-Q", "tenant"]
-  #   environment:
-  #     <<: *common-env
-  #     DATABASE_URL: postgresql+asyncpg://postgres:${POSTGRES_PASSWORD}@postgres-tenant:5432/gxp_tenant
-  #     VALKEY_URL: redis://:${VALKEY_PASSWORD}@valkey:6379/6
-  #     CELERY_BROKER_URL: redis://:${VALKEY_PASSWORD}@valkey:6379/6
-  #     CLIENT_ID: gxp-tenant-service
-  #     CLIENT_SECRET: ${TENANT_SERVICE_CLIENT_SECRET}
-  #   depends_on:
-  #     postgres-tenant:
-  #       condition: service_healthy
-  #     valkey:
-  #       condition: service_healthy
-  #   networks:
-  #     - gxp-net
+  tenant-worker:
+    build:
+      context: ../..
+      dockerfile: services/tenant-service/Dockerfile
+    restart: unless-stopped
+    command: ["celery", "-A", "worker.celery_app", "worker", "--loglevel=info", "-Q", "tenant"]
+    environment:
+      <<: *common-env
+      DATABASE_URL: postgresql+asyncpg://postgres:${POSTGRES_PASSWORD}@postgres-tenant:5432/gxp_tenant
+      VALKEY_URL: redis://:${VALKEY_PASSWORD}@valkey:6379/6
+      CELERY_BROKER_URL: redis://:${VALKEY_PASSWORD}@valkey:6379/6
+      CLIENT_ID: gxp-tenant-service
+      CLIENT_SECRET: ${TENANT_SERVICE_CLIENT_SECRET}
+    depends_on:
+      postgres-tenant:
+        condition: service_healthy
+      valkey:
+        condition: service_healthy
+    networks:
+      - gxp-net
 
-  # tenant-beat:
-  #   build:
-  #     context: ../..
-  #     dockerfile: services/tenant-service/Dockerfile
-  #   restart: unless-stopped
-  #   command: ["celery", "-A", "worker.celery_app", "beat", "--loglevel=info", "--schedule=/tmp/celerybeat-schedule"]
-  #   environment:
-  #     <<: *common-env
-  #     DATABASE_URL: postgresql+asyncpg://postgres:${POSTGRES_PASSWORD}@postgres-tenant:5432/gxp_tenant
-  #     VALKEY_URL: redis://:${VALKEY_PASSWORD}@valkey:6379/6
-  #     CELERY_BROKER_URL: redis://:${VALKEY_PASSWORD}@valkey:6379/6
-  #     CLIENT_ID: gxp-tenant-service
-  #     CLIENT_SECRET: ${TENANT_SERVICE_CLIENT_SECRET}
-  #   depends_on:
-  #     valkey:
-  #       condition: service_healthy
-  #   networks:
-  #     - gxp-net
+  tenant-beat:
+    build:
+      context: ../..
+      dockerfile: services/tenant-service/Dockerfile
+    restart: unless-stopped
+    command: ["celery", "-A", "worker.celery_app", "beat", "--loglevel=info", "--schedule=/tmp/celerybeat-schedule"]
+    environment:
+      <<: *common-env
+      DATABASE_URL: postgresql+asyncpg://postgres:${POSTGRES_PASSWORD}@postgres-tenant:5432/gxp_tenant
+      VALKEY_URL: redis://:${VALKEY_PASSWORD}@valkey:6379/6
+      CELERY_BROKER_URL: redis://:${VALKEY_PASSWORD}@valkey:6379/6
+      CLIENT_ID: gxp-tenant-service
+      CLIENT_SECRET: ${TENANT_SERVICE_CLIENT_SECRET}
+    depends_on:
+      valkey:
+        condition: service_healthy
+    networks:
+      - gxp-net
 
   # app-service:
   #   build:

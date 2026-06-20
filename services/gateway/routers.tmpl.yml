@@ -26,12 +26,47 @@ http:
       tls: {}
       service: minio-console
 
-    # api:
-    #   rule: "Host(`api.${GXP_DOMAIN}`)"
+    tenant-service:
+      rule: "Host(`api.${GXP_DOMAIN}`) && PathPrefix(`/api/v1/tenants`)"
+      entryPoints: [websecure]
+      middlewares: [secure-headers, rate-limit]
+      tls: {}
+      service: tenant-service
+
+    # app-service:
+    #   rule: "Host(`api.${GXP_DOMAIN}`) && PathPrefix(`/api/v1/apps`)"
     #   entryPoints: [websecure]
     #   middlewares: [secure-headers, rate-limit]
     #   tls: {}
-    #   service: tenant-service   # swap for a weighted round-robin once multiple API services are live
+    #   service: app-service
+
+    # workflow-service:
+    #   rule: "Host(`api.${GXP_DOMAIN}`) && PathPrefix(`/api/v1/workflow`)"
+    #   entryPoints: [websecure]
+    #   middlewares: [secure-headers, rate-limit]
+    #   tls: {}
+    #   service: workflow-service
+
+    # case-service:
+    #   rule: "Host(`api.${GXP_DOMAIN}`) && PathPrefix(`/api/v1/cases`)"
+    #   entryPoints: [websecure]
+    #   middlewares: [secure-headers, rate-limit]
+    #   tls: {}
+    #   service: case-service
+
+    # document-service:
+    #   rule: "Host(`api.${GXP_DOMAIN}`) && PathPrefix(`/api/v1/documents`)"
+    #   entryPoints: [websecure]
+    #   middlewares: [secure-headers, rate-limit]
+    #   tls: {}
+    #   service: document-service
+
+    # audit-service:
+    #   rule: "Host(`api.${GXP_DOMAIN}`) && PathPrefix(`/api/v1/audit`)"
+    #   entryPoints: [websecure]
+    #   middlewares: [secure-headers, rate-limit]
+    #   tls: {}
+    #   service: audit-service
 
   services:
     keycloak:
@@ -54,7 +89,32 @@ http:
         servers:
           - url: "http://minio:9001"
 
-    # tenant-service:
+    tenant-service:
+      loadBalancer:
+        servers:
+          - url: "http://tenant-service:8000"
+
+    # app-service:
     #   loadBalancer:
     #     servers:
-    #       - url: "http://tenant-service:8000"
+    #       - url: "http://app-service:8000"
+
+    # workflow-service:
+    #   loadBalancer:
+    #     servers:
+    #       - url: "http://workflow-service:8000"
+
+    # case-service:
+    #   loadBalancer:
+    #     servers:
+    #       - url: "http://case-service:8000"
+
+    # document-service:
+    #   loadBalancer:
+    #     servers:
+    #       - url: "http://document-service:8000"
+
+    # audit-service:
+    #   loadBalancer:
+    #     servers:
+    #       - url: "http://audit-service:8000"
