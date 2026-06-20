@@ -38,7 +38,7 @@ async def publish_template(
         category=body.category,
         name=body.name,
         description=body.description,
-        schema_json=body.schema_json,
+        schema_json=body.template_body,
         tags=body.tags,
         published_by=user.user_id,
     )

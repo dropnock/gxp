@@ -62,10 +62,12 @@ class CrossTenantGrantRead(BaseModel):
 
 
 class CatalogTemplateCreate(BaseModel):
+    model_config = {"populate_by_name": True}
+
     category: Literal["app", "workflow", "dmn", "case_type"]
     name: str = Field(..., min_length=2, max_length=200)
     description: str | None = None
-    schema_json: dict
+    template_body: dict = Field(..., alias="schema_json")
     tags: list[str] | None = None
 
 
