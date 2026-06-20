@@ -64,16 +64,16 @@ services:
     networks:
       - gxp-net
 
-  # postgres-case:
-  #   <<: *postgres-common
-  #   environment:
-  #     POSTGRES_DB: gxp_case
-  #     POSTGRES_USER: postgres
-  #     POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
-  #   volumes:
-  #     - postgres-case-data:/var/lib/postgresql/data
-  #   networks:
-  #     - gxp-net
+  postgres-case:
+    <<: *postgres-common
+    environment:
+      POSTGRES_DB: gxp_case
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+    volumes:
+      - postgres-case-data:/var/lib/postgresql/data
+    networks:
+      - gxp-net
 
   # postgres-document:
   #   <<: *postgres-common
@@ -377,34 +377,27 @@ services:
     networks:
       - gxp-net
 
-  # case-service:
-  #   build:
-  #     context: ../..
-  #     dockerfile: services/case-service/Dockerfile
-  #   restart: unless-stopped
-  #   environment:
-  #     <<: *common-env
-  #     DATABASE_URL: postgresql+asyncpg://postgres:${POSTGRES_PASSWORD}@postgres-case:5432/gxp_case
-  #     VALKEY_URL: redis://:${VALKEY_PASSWORD}@valkey:6379/2
-  #     KEYCLOAK_URL: http://keycloak:8080
-  #     CLIENT_ID: gxp-case-service
-  #     CLIENT_SECRET: ${CASE_SERVICE_CLIENT_SECRET}
-  #     OPENSEARCH_URL: http://opensearch:9200
-  #     WORKFLOW_SERVICE_URL: http://workflow-service:8000
-  #     TENANT_SERVICE_DB_URL: postgresql+asyncpg://postgres:${POSTGRES_PASSWORD}@postgres-tenant:5432/gxp_tenant
-  #   depends_on:
-  #     postgres-case:
-  #       condition: service_healthy
-  #     valkey:
-  #       condition: service_healthy
-  #   networks:
-  #     - gxp-net
-  #   labels:
-  #     - "traefik.enable=true"
-  #     - "traefik.http.routers.case-service.rule=Host(`api.${GXP_DOMAIN:-gxp.localhost}`) && PathPrefix(`/api/v1/cases`)"
-  #     - "traefik.http.routers.case-service.entrypoints=websecure"
-  #     - "traefik.http.routers.case-service.tls=true"
-  #     - "traefik.http.services.case-service.loadbalancer.server.port=8000"
+  case-service:
+    build:
+      context: ../..
+      dockerfile: services/case-service/Dockerfile
+    restart: unless-stopped
+    environment:
+      <<: *common-env
+      DATABASE_URL: postgresql+asyncpg://postgres:${POSTGRES_PASSWORD}@postgres-case:5432/gxp_case
+      VALKEY_URL: redis://:${VALKEY_PASSWORD}@valkey:6379/2
+      KEYCLOAK_URL: http://keycloak:8080
+      CLIENT_ID: gxp-case-service
+      CLIENT_SECRET: ${CASE_SERVICE_CLIENT_SECRET}
+      WORKFLOW_SERVICE_URL: http://workflow-service:8000
+      TENANT_SERVICE_DB_URL: postgresql+asyncpg://postgres:${POSTGRES_PASSWORD}@postgres-tenant:5432/gxp_tenant
+    depends_on:
+      postgres-case:
+        condition: service_healthy
+      valkey:
+        condition: service_healthy
+    networks:
+      - gxp-net
 
   # document-service:
   #   build:

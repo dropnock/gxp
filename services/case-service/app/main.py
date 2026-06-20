@@ -28,7 +28,14 @@ async def lifespan(app: FastAPI):
             pass
 
 
-app = FastAPI(title="GXP Case Service", version="0.1.0", lifespan=lifespan)
+app = FastAPI(
+    title="GXP Case Service",
+    version="0.1.0",
+    lifespan=lifespan,
+    docs_url="/api/v1/cases/docs",
+    openapi_url="/api/v1/cases/openapi.json",
+    redoc_url="/api/v1/cases/redoc",
+)
 
 app.add_middleware(
     CORSMiddleware,
@@ -44,5 +51,6 @@ app.include_router(v1_router, prefix="/api/v1")
 
 
 @app.get("/health")
+@app.get("/api/v1/cases/health")
 async def health():
     return {"status": "ok", "service": "case-service"}
