@@ -151,7 +151,7 @@ services:
   keycloak:
     image: quay.io/keycloak/keycloak:26.0
     restart: unless-stopped
-    command: start-dev --import-realm
+    command: start-dev
     environment:
       KC_DB: postgres
       KC_DB_URL: jdbc:postgresql://postgres-keycloak:5432/keycloak
@@ -164,7 +164,6 @@ services:
       KC_HTTP_ENABLED: "true"
       KC_PROXY_HEADERS: "xforwarded"
     volumes:
-      - ../../services/identity/realm-export.json:/opt/keycloak/data/import/realm-export.json:ro
       - ../../services/identity/themes/gxp:/opt/keycloak/themes/gxp:ro
     depends_on:
       postgres-keycloak:
