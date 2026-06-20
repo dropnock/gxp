@@ -41,7 +41,7 @@
       "standardFlowEnabled": true,
       "implicitFlowEnabled": false,
       "directAccessGrantsEnabled": false,
-      "pkceCodeChallengeMethod": "S256",
+      "attributes": { "pkce.code.challenge.method": "S256" },
       "redirectUris": [
         "https://portal.{gxp_domain}/*",
         "https://{tenant_slug}.portal.{gxp_domain}/*",
@@ -56,7 +56,7 @@
       "enabled": true,
       "publicClient": true,
       "standardFlowEnabled": true,
-      "pkceCodeChallengeMethod": "S256",
+      "attributes": { "pkce.code.challenge.method": "S256" },
       "redirectUris": [
         "https://runtime.{gxp_domain}/*",
         "https://{tenant_slug}.apps.{gxp_domain}/*"
