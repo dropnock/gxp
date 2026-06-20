@@ -1,5 +1,6 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { getAuthHeader } from "../../../shared/auth";
+import { API_BASE } from "../../../shared/api";
 
 export interface CrossTenantGrant {
   id: string;
@@ -31,7 +32,7 @@ async function apiFetch<T>(url: string, init?: RequestInit): Promise<T> {
   return res.json() as Promise<T>;
 }
 
-const BASE = "/api/v1/tenants";
+const BASE = `${API_BASE}/api/v1/tenants`;
 
 export function useGrants(tenantSlug: string | null) {
   return useQuery<CrossTenantGrant[]>({

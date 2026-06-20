@@ -1,5 +1,6 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { getAuthHeader } from "../../../shared/auth";
+import { API_BASE } from "../../../shared/api";
 
 export interface Tenant {
   id: string;
@@ -16,7 +17,7 @@ export interface TenantCreate {
   name: string;
 }
 
-const BASE = "/api/v1/tenants";
+const BASE = `${API_BASE}/api/v1/tenants`;
 
 async function apiFetch<T>(url: string, init?: RequestInit): Promise<T> {
   const res = await fetch(url, {

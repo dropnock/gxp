@@ -1,5 +1,6 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { getAuthHeader } from "../../../shared/auth";
+import { API_BASE } from "../../../shared/api";
 
 export interface CatalogTemplate {
   id: string;
@@ -37,7 +38,7 @@ async function apiFetch<T>(url: string, init?: RequestInit): Promise<T> {
   return res.json() as Promise<T>;
 }
 
-const BASE = "/api/v1/catalog";
+const BASE = `${API_BASE}/api/v1/catalog`;
 
 export function useCatalog(category?: string) {
   const params = category ? `?category=${category}` : "";

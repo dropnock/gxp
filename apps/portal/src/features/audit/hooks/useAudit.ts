@@ -1,7 +1,8 @@
 import { useQuery } from "@tanstack/react-query";
 import { useAuth } from "../../../shared/auth/AuthContext";
+import { API_BASE } from "../../../shared/api";
 
-const BASE = "/api/v1/audit";
+const BASE = `${API_BASE}/api/v1/audit`;
 
 async function apiFetch(url: string, token: string) {
   const res = await fetch(url, {

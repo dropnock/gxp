@@ -1,7 +1,8 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useAuth } from "../../../shared/auth/AuthContext";
+import { API_BASE } from "../../../shared/api";
 
-const API = "/api/v1";
+const API = `${API_BASE}/api/v1`;
 
 async function apiFetch(url: string, token: string, opts: RequestInit = {}) {
   const res = await fetch(url, {

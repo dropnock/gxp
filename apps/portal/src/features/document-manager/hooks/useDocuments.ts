@@ -1,5 +1,6 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { getAuthHeader } from "../../../shared/auth";
+import { API_BASE } from "../../../shared/api";
 
 export interface Folder {
   id: string;
@@ -35,7 +36,7 @@ export interface DocumentVersion {
   uploaded_at: string;
 }
 
-const BASE = "/api/v1/documents";
+const BASE = `${API_BASE}/api/v1/documents`;
 
 async function apiFetch<T>(url: string, init?: RequestInit): Promise<T> {
   const res = await fetch(url, {
