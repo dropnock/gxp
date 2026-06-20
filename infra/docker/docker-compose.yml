@@ -108,19 +108,19 @@ services:
     networks:
       - gxp-net
 
-  # valkey:
-  #   image: valkey/valkey:8-alpine
-  #   restart: unless-stopped
-  #   command: ["valkey-server", "--requirepass", "${VALKEY_PASSWORD}"]
-  #   volumes:
-  #     - valkey-data:/data
-  #   networks:
-  #     - gxp-net
-  #   healthcheck:
-  #     test: ["CMD", "valkey-cli", "-a", "${VALKEY_PASSWORD}", "ping"]
-  #     interval: 10s
-  #     timeout: 5s
-  #     retries: 5
+  valkey:
+    image: valkey/valkey:8-alpine
+    restart: unless-stopped
+    command: ["valkey-server", "--requirepass", "${VALKEY_PASSWORD}"]
+    volumes:
+      - valkey-data:/data
+    networks:
+      - gxp-net
+    healthcheck:
+      test: ["CMD", "valkey-cli", "-a", "${VALKEY_PASSWORD}", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
 
   # minio:
   #   image: minio/minio:RELEASE.2025-01-20T14-49-07Z
