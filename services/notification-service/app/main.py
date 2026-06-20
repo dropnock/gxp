@@ -5,14 +5,12 @@ from fastapi.middleware.cors import CORSMiddleware
 
 from app.api.v1 import router as v1_router
 from app.config import settings
-from app.db.session import init_db
 from gxp_shared.audit.middleware import AuditMiddleware
 from gxp_shared.auth.tenant_context import TenantContextMiddleware
 
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
-    await init_db()
     yield
 
 
