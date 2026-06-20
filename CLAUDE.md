@@ -19,7 +19,7 @@ See `/home/dropnock/.claude/plans/playful-tinkering-cupcake.md` for the full arc
 | document-service | 8000 | gxp_documents | Schema-per-tenant: t_{slug} |
 | audit-service | 8000 | gxp_audit | Schema-per-tenant: t_{slug} |
 | notification-service | 8000 | — | |
-| Keycloak | 8080 | keycloak |
+| Keycloak | 8080 (internal) / 8180 (localhost direct) | keycloak |
 | MinIO | 9000/9001 | — |
 | Traefik dashboard | 8080 | — |
 
@@ -40,8 +40,10 @@ infra/scripts/gen-certs.sh
 cd infra/docker && docker compose up -d
 
 # 4. Bootstrap Keycloak realm (first time only)
-KEYCLOAK_URL=https://keycloak.gxp.localhost services/identity/scripts/bootstrap-realm.sh
-# On a test server: KEYCLOAK_URL=https://keycloak.<SERVER_IP>.nip.io ...
+# Keycloak is also exposed on localhost:8180 for scripts — bypasses DNS and TLS:
+GXP_DOMAIN=gxp.localhost services/identity/scripts/bootstrap-realm.sh
+# On a test server with a custom domain (e.g. local.dropnock.com):
+GXP_DOMAIN=local.dropnock.com services/identity/scripts/bootstrap-realm.sh
 
 # 5. Access the portal
 # Local:       https://portal.gxp.localhost

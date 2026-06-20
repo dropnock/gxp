@@ -152,6 +152,8 @@ services:
     image: quay.io/keycloak/keycloak:26.0
     restart: unless-stopped
     command: start-dev
+    ports:
+      - "127.0.0.1:8180:8080"  # direct access for bootstrap scripts — bypasses Traefik
     environment:
       KC_DB: postgres
       KC_DB_URL: jdbc:postgresql://postgres-keycloak:5432/keycloak

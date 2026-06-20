@@ -7,7 +7,7 @@
 # or pass CURL_OPTS="-k" to skip verification (dev only).
 set -euo pipefail
 
-KEYCLOAK_URL="${KEYCLOAK_URL:-https://keycloak.gxp.localhost}"
+KEYCLOAK_URL="${KEYCLOAK_URL:-http://localhost:8180}"
 KEYCLOAK_URL="${KEYCLOAK_URL%/}"  # strip trailing slash
 ADMIN_USER="${KEYCLOAK_ADMIN:-admin}"
 ADMIN_PASS="${KEYCLOAK_ADMIN_PASSWORD:-changeme_dev}"
@@ -15,9 +15,15 @@ REALM_FILE="$(cd "$(dirname "$0")" && pwd)/../realm-export.json"
 CURL_OPTS="${CURL_OPTS:--k}"  # default to -k for dev self-signed certs
 
 # Derive GXP_DOMAIN from KEYCLOAK_URL if not set explicitly.
-# e.g. https://keycloak.gxp.localhost → gxp.localhost
+# Works when URL is https://keycloak.<domain> — strips the keycloak. prefix.
+# When using the direct localhost URL (default), GXP_DOMAIN must be set explicitly.
 if [[ -z "${GXP_DOMAIN:-}" ]]; then
   GXP_DOMAIN="${KEYCLOAK_URL#*://keycloak.}"
+  if [[ "$GXP_DOMAIN" == "$KEYCLOAK_URL"* || "$GXP_DOMAIN" == "localhost"* ]]; then
+    echo "ERROR: Cannot derive GXP_DOMAIN from '$KEYCLOAK_URL'."
+    echo "  Set it explicitly: GXP_DOMAIN=local.dropnock.com $0"
+    exit 1
+  fi
 fi
 
 echo "Keycloak URL : $KEYCLOAK_URL"
