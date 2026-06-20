@@ -42,16 +42,16 @@ services:
     networks:
       - gxp-net
 
-  # postgres-workflow:
-  #   <<: *postgres-common
-  #   environment:
-  #     POSTGRES_DB: gxp_workflow
-  #     POSTGRES_USER: postgres
-  #     POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
-  #   volumes:
-  #     - postgres-workflow-data:/var/lib/postgresql/data
-  #   networks:
-  #     - gxp-net
+  postgres-workflow:
+    <<: *postgres-common
+    environment:
+      POSTGRES_DB: gxp_workflow
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+    volumes:
+      - postgres-workflow-data:/var/lib/postgresql/data
+    networks:
+      - gxp-net
 
   postgres-tenant:
     <<: *postgres-common
@@ -314,74 +314,68 @@ services:
     networks:
       - gxp-net
 
-  # workflow-service:
-  #   build:
-  #     context: ../..
-  #     dockerfile: services/workflow-service/Dockerfile
-  #   restart: unless-stopped
-  #   environment:
-  #     <<: *common-env
-  #     DATABASE_URL: postgresql+asyncpg://postgres:${POSTGRES_PASSWORD}@postgres-workflow:5432/gxp_workflow
-  #     VALKEY_URL: redis://:${VALKEY_PASSWORD}@valkey:6379/1
-  #     CELERY_BROKER_URL: redis://:${VALKEY_PASSWORD}@valkey:6379/1
-  #     KEYCLOAK_URL: http://keycloak:8080
-  #     CLIENT_ID: gxp-workflow-service
-  #     CLIENT_SECRET: ${WORKFLOW_SERVICE_CLIENT_SECRET}
-  #   depends_on:
-  #     postgres-workflow:
-  #       condition: service_healthy
-  #     valkey:
-  #       condition: service_healthy
-  #   networks:
-  #     - gxp-net
-  #   labels:
-  #     - "traefik.enable=true"
-  #     - "traefik.http.routers.workflow-service.rule=Host(`api.${GXP_DOMAIN:-gxp.localhost}`) && PathPrefix(`/api/v1/workflow`)"
-  #     - "traefik.http.routers.workflow-service.entrypoints=websecure"
-  #     - "traefik.http.routers.workflow-service.tls=true"
-  #     - "traefik.http.services.workflow-service.loadbalancer.server.port=8000"
+  workflow-service:
+    build:
+      context: ../..
+      dockerfile: services/workflow-service/Dockerfile
+    restart: unless-stopped
+    environment:
+      <<: *common-env
+      DATABASE_URL: postgresql+asyncpg://postgres:${POSTGRES_PASSWORD}@postgres-workflow:5432/gxp_workflow
+      VALKEY_URL: redis://:${VALKEY_PASSWORD}@valkey:6379/1
+      CELERY_BROKER_URL: redis://:${VALKEY_PASSWORD}@valkey:6379/1
+      KEYCLOAK_URL: http://keycloak:8080
+      CLIENT_ID: gxp-workflow-service
+      CLIENT_SECRET: ${WORKFLOW_SERVICE_CLIENT_SECRET}
+    depends_on:
+      postgres-workflow:
+        condition: service_healthy
+      valkey:
+        condition: service_healthy
+    networks:
+      - gxp-net
 
-  # workflow-worker:
-  #   build:
-  #     context: ../..
-  #     dockerfile: services/workflow-service/Dockerfile
-  #   restart: unless-stopped
-  #   command: ["celery", "-A", "worker.celery_app", "worker", "--loglevel=info", "-Q", "workflow"]
-  #   environment:
-  #     <<: *common-env
-  #     DATABASE_URL: postgresql+asyncpg://postgres:${POSTGRES_PASSWORD}@postgres-workflow:5432/gxp_workflow
-  #     VALKEY_URL: redis://:${VALKEY_PASSWORD}@valkey:6379/1
-  #     CELERY_BROKER_URL: redis://:${VALKEY_PASSWORD}@valkey:6379/1
-  #     KEYCLOAK_URL: http://keycloak:8080
-  #     CLIENT_ID: gxp-workflow-service
-  #     CLIENT_SECRET: ${WORKFLOW_SERVICE_CLIENT_SECRET}
-  #   depends_on:
-  #     postgres-workflow:
-  #       condition: service_healthy
-  #     valkey:
-  #       condition: service_healthy
-  #   networks:
-  #     - gxp-net
+  workflow-worker:
+    build:
+      context: ../..
+      dockerfile: services/workflow-service/Dockerfile
+    restart: unless-stopped
+    command: ["celery", "-A", "worker.celery_app", "worker", "--loglevel=info", "-Q", "workflow"]
+    environment:
+      <<: *common-env
+      DATABASE_URL: postgresql+asyncpg://postgres:${POSTGRES_PASSWORD}@postgres-workflow:5432/gxp_workflow
+      VALKEY_URL: redis://:${VALKEY_PASSWORD}@valkey:6379/1
+      CELERY_BROKER_URL: redis://:${VALKEY_PASSWORD}@valkey:6379/1
+      KEYCLOAK_URL: http://keycloak:8080
+      CLIENT_ID: gxp-workflow-service
+      CLIENT_SECRET: ${WORKFLOW_SERVICE_CLIENT_SECRET}
+    depends_on:
+      postgres-workflow:
+        condition: service_healthy
+      valkey:
+        condition: service_healthy
+    networks:
+      - gxp-net
 
-  # workflow-beat:
-  #   build:
-  #     context: ../..
-  #     dockerfile: services/workflow-service/Dockerfile
-  #   restart: unless-stopped
-  #   command: ["celery", "-A", "worker.celery_app", "beat", "--loglevel=info", "--schedule=/tmp/celerybeat-schedule"]
-  #   environment:
-  #     <<: *common-env
-  #     DATABASE_URL: postgresql+asyncpg://postgres:${POSTGRES_PASSWORD}@postgres-workflow:5432/gxp_workflow
-  #     VALKEY_URL: redis://:${VALKEY_PASSWORD}@valkey:6379/1
-  #     CELERY_BROKER_URL: redis://:${VALKEY_PASSWORD}@valkey:6379/1
-  #     KEYCLOAK_URL: http://keycloak:8080
-  #     CLIENT_ID: gxp-workflow-service
-  #     CLIENT_SECRET: ${WORKFLOW_SERVICE_CLIENT_SECRET}
-  #   depends_on:
-  #     valkey:
-  #       condition: service_healthy
-  #   networks:
-  #     - gxp-net
+  workflow-beat:
+    build:
+      context: ../..
+      dockerfile: services/workflow-service/Dockerfile
+    restart: unless-stopped
+    command: ["celery", "-A", "worker.celery_app", "beat", "--loglevel=info", "--schedule=/tmp/celerybeat-schedule"]
+    environment:
+      <<: *common-env
+      DATABASE_URL: postgresql+asyncpg://postgres:${POSTGRES_PASSWORD}@postgres-workflow:5432/gxp_workflow
+      VALKEY_URL: redis://:${VALKEY_PASSWORD}@valkey:6379/1
+      CELERY_BROKER_URL: redis://:${VALKEY_PASSWORD}@valkey:6379/1
+      KEYCLOAK_URL: http://keycloak:8080
+      CLIENT_ID: gxp-workflow-service
+      CLIENT_SECRET: ${WORKFLOW_SERVICE_CLIENT_SECRET}
+    depends_on:
+      valkey:
+        condition: service_healthy
+    networks:
+      - gxp-net
 
   # case-service:
   #   build:

@@ -40,12 +40,12 @@ http:
       tls: {}
       service: app-service
 
-    # workflow-service:
-    #   rule: "Host(`api.${GXP_DOMAIN}`) && PathPrefix(`/api/v1/workflow`)"
-    #   entryPoints: [websecure]
-    #   middlewares: [secure-headers, rate-limit]
-    #   tls: {}
-    #   service: workflow-service
+    workflow-service:
+      rule: "Host(`api.${GXP_DOMAIN}`) && PathPrefix(`/api/v1/workflow`)"
+      entryPoints: [websecure]
+      middlewares: [secure-headers, rate-limit]
+      tls: {}
+      service: workflow-service
 
     # case-service:
     #   rule: "Host(`api.${GXP_DOMAIN}`) && PathPrefix(`/api/v1/cases`)"
@@ -99,10 +99,10 @@ http:
         servers:
           - url: "http://app-service:8000"
 
-    # workflow-service:
-    #   loadBalancer:
-    #     servers:
-    #       - url: "http://workflow-service:8000"
+    workflow-service:
+      loadBalancer:
+        servers:
+          - url: "http://workflow-service:8000"
 
     # case-service:
     #   loadBalancer:
