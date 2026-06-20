@@ -17,7 +17,14 @@ async def lifespan(app: FastAPI):
     task.cancel()
 
 
-app = FastAPI(title="GXP Audit Service", version="0.1.0", lifespan=lifespan)
+app = FastAPI(
+    title="GXP Audit Service",
+    version="0.1.0",
+    lifespan=lifespan,
+    docs_url="/api/v1/audit/docs",
+    openapi_url="/api/v1/audit/openapi.json",
+    redoc_url="/api/v1/audit/redoc",
+)
 
 app.add_middleware(
     CORSMiddleware,
@@ -41,5 +48,6 @@ app.include_router(v1_router, prefix="/api/v1")
 
 
 @app.get("/health")
+@app.get("/api/v1/audit/health")
 async def health():
     return {"status": "ok", "service": "audit-service"}

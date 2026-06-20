@@ -86,16 +86,16 @@ services:
   #   networks:
   #     - gxp-net
 
-  # postgres-audit:
-  #   <<: *postgres-common
-  #   environment:
-  #     POSTGRES_DB: gxp_audit
-  #     POSTGRES_USER: postgres
-  #     POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
-  #   volumes:
-  #     - postgres-audit-data:/var/lib/postgresql/data
-  #   networks:
-  #     - gxp-net
+  postgres-audit:
+    <<: *postgres-common
+    environment:
+      POSTGRES_DB: gxp_audit
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+    volumes:
+      - postgres-audit-data:/var/lib/postgresql/data
+    networks:
+      - gxp-net
 
   postgres-keycloak:
     <<: *postgres-common
@@ -484,80 +484,74 @@ services:
   #   networks:
   #     - gxp-net
 
-  # audit-service:
-  #   build:
-  #     context: ../..
-  #     dockerfile: services/audit-service/Dockerfile
-  #   restart: unless-stopped
-  #   environment:
-  #     <<: *common-env
-  #     DATABASE_URL: postgresql+asyncpg://postgres:${POSTGRES_PASSWORD}@postgres-audit:5432/gxp_audit
-  #     VALKEY_URL: redis://:${VALKEY_PASSWORD}@valkey:6379/4
-  #     KEYCLOAK_URL: http://keycloak:8080
-  #     CLIENT_ID: gxp-audit-service
-  #     CLIENT_SECRET: ${AUDIT_SERVICE_CLIENT_SECRET}
-  #     CELERY_BROKER_URL: redis://:${VALKEY_PASSWORD}@valkey:6379/4
-  #     MINIO_ENDPOINT: minio:9000
-  #     MINIO_ACCESS_KEY: ${MINIO_ROOT_USER}
-  #     MINIO_SECRET_KEY: ${MINIO_ROOT_PASSWORD}
-  #   depends_on:
-  #     postgres-audit:
-  #       condition: service_healthy
-  #     valkey:
-  #       condition: service_healthy
-  #   networks:
-  #     - gxp-net
-  #   labels:
-  #     - "traefik.enable=true"
-  #     - "traefik.http.routers.audit-service.rule=Host(`api.${GXP_DOMAIN:-gxp.localhost}`) && PathPrefix(`/api/v1/audit`)"
-  #     - "traefik.http.routers.audit-service.entrypoints=websecure"
-  #     - "traefik.http.routers.audit-service.tls=true"
-  #     - "traefik.http.services.audit-service.loadbalancer.server.port=8000"
+  audit-service:
+    build:
+      context: ../..
+      dockerfile: services/audit-service/Dockerfile
+    restart: unless-stopped
+    environment:
+      <<: *common-env
+      DATABASE_URL: postgresql+asyncpg://postgres:${POSTGRES_PASSWORD}@postgres-audit:5432/gxp_audit
+      VALKEY_URL: redis://:${VALKEY_PASSWORD}@valkey:6379/4
+      KEYCLOAK_URL: http://keycloak:8080
+      CLIENT_ID: gxp-audit-service
+      CLIENT_SECRET: ${AUDIT_SERVICE_CLIENT_SECRET}
+      CELERY_BROKER_URL: redis://:${VALKEY_PASSWORD}@valkey:6379/4
+      MINIO_ENDPOINT: minio:9000
+      MINIO_ACCESS_KEY: ${MINIO_ROOT_USER}
+      MINIO_SECRET_KEY: ${MINIO_ROOT_PASSWORD}
+    depends_on:
+      postgres-audit:
+        condition: service_healthy
+      valkey:
+        condition: service_healthy
+    networks:
+      - gxp-net
 
-  # audit-worker:
-  #   build:
-  #     context: ../..
-  #     dockerfile: services/audit-service/Dockerfile
-  #   restart: unless-stopped
-  #   command: ["celery", "-A", "worker.celery_app", "worker", "--loglevel=info", "-Q", "audit"]
-  #   environment:
-  #     <<: *common-env
-  #     DATABASE_URL: postgresql+asyncpg://postgres:${POSTGRES_PASSWORD}@postgres-audit:5432/gxp_audit
-  #     VALKEY_URL: redis://:${VALKEY_PASSWORD}@valkey:6379/4
-  #     CELERY_BROKER_URL: redis://:${VALKEY_PASSWORD}@valkey:6379/4
-  #     MINIO_ENDPOINT: minio:9000
-  #     MINIO_ACCESS_KEY: ${MINIO_ROOT_USER}
-  #     MINIO_SECRET_KEY: ${MINIO_ROOT_PASSWORD}
-  #     CLIENT_ID: gxp-audit-service
-  #     CLIENT_SECRET: ${AUDIT_SERVICE_CLIENT_SECRET}
-  #   depends_on:
-  #     postgres-audit:
-  #       condition: service_healthy
-  #     valkey:
-  #       condition: service_healthy
-  #     minio:
-  #       condition: service_healthy
-  #   networks:
-  #     - gxp-net
+  audit-worker:
+    build:
+      context: ../..
+      dockerfile: services/audit-service/Dockerfile
+    restart: unless-stopped
+    command: ["celery", "-A", "worker.celery_app", "worker", "--loglevel=info", "-Q", "audit"]
+    environment:
+      <<: *common-env
+      DATABASE_URL: postgresql+asyncpg://postgres:${POSTGRES_PASSWORD}@postgres-audit:5432/gxp_audit
+      VALKEY_URL: redis://:${VALKEY_PASSWORD}@valkey:6379/4
+      CELERY_BROKER_URL: redis://:${VALKEY_PASSWORD}@valkey:6379/4
+      MINIO_ENDPOINT: minio:9000
+      MINIO_ACCESS_KEY: ${MINIO_ROOT_USER}
+      MINIO_SECRET_KEY: ${MINIO_ROOT_PASSWORD}
+      CLIENT_ID: gxp-audit-service
+      CLIENT_SECRET: ${AUDIT_SERVICE_CLIENT_SECRET}
+    depends_on:
+      postgres-audit:
+        condition: service_healthy
+      valkey:
+        condition: service_healthy
+      minio:
+        condition: service_healthy
+    networks:
+      - gxp-net
 
-  # audit-beat:
-  #   build:
-  #     context: ../..
-  #     dockerfile: services/audit-service/Dockerfile
-  #   restart: unless-stopped
-  #   command: ["celery", "-A", "worker.celery_app", "beat", "--loglevel=info", "--schedule=/tmp/celerybeat-schedule"]
-  #   environment:
-  #     <<: *common-env
-  #     DATABASE_URL: postgresql+asyncpg://postgres:${POSTGRES_PASSWORD}@postgres-audit:5432/gxp_audit
-  #     VALKEY_URL: redis://:${VALKEY_PASSWORD}@valkey:6379/4
-  #     CELERY_BROKER_URL: redis://:${VALKEY_PASSWORD}@valkey:6379/4
-  #     CLIENT_ID: gxp-audit-service
-  #     CLIENT_SECRET: ${AUDIT_SERVICE_CLIENT_SECRET}
-  #   depends_on:
-  #     valkey:
-  #       condition: service_healthy
-  #   networks:
-  #     - gxp-net
+  audit-beat:
+    build:
+      context: ../..
+      dockerfile: services/audit-service/Dockerfile
+    restart: unless-stopped
+    command: ["celery", "-A", "worker.celery_app", "beat", "--loglevel=info", "--schedule=/tmp/celerybeat-schedule"]
+    environment:
+      <<: *common-env
+      DATABASE_URL: postgresql+asyncpg://postgres:${POSTGRES_PASSWORD}@postgres-audit:5432/gxp_audit
+      VALKEY_URL: redis://:${VALKEY_PASSWORD}@valkey:6379/4
+      CELERY_BROKER_URL: redis://:${VALKEY_PASSWORD}@valkey:6379/4
+      CLIENT_ID: gxp-audit-service
+      CLIENT_SECRET: ${AUDIT_SERVICE_CLIENT_SECRET}
+    depends_on:
+      valkey:
+        condition: service_healthy
+    networks:
+      - gxp-net
 
   # notification-service:
   #   build:
