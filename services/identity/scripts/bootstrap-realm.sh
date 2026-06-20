@@ -8,10 +8,11 @@
 set -euo pipefail
 
 KEYCLOAK_URL="${KEYCLOAK_URL:-https://keycloak.gxp.localhost}"
+KEYCLOAK_URL="${KEYCLOAK_URL%/}"  # strip trailing slash
 ADMIN_USER="${KEYCLOAK_ADMIN:-admin}"
 ADMIN_PASS="${KEYCLOAK_ADMIN_PASSWORD:-changeme_dev}"
-REALM_FILE="$(dirname "$0")/../realm-export.json"
-CURL_OPTS="${CURL_OPTS:-}"
+REALM_FILE="$(cd "$(dirname "$0")" && pwd)/../realm-export.json"
+CURL_OPTS="${CURL_OPTS:--k}"  # default to -k for dev self-signed certs
 
 # Derive GXP_DOMAIN from KEYCLOAK_URL if not set explicitly.
 # e.g. https://keycloak.gxp.localhost → gxp.localhost
@@ -19,11 +20,20 @@ if [[ -z "${GXP_DOMAIN:-}" ]]; then
   GXP_DOMAIN="${KEYCLOAK_URL#*://keycloak.}"
 fi
 
-echo "Domain: ${GXP_DOMAIN}"
-echo "Obtaining admin token from $KEYCLOAK_URL ..."
+echo "Keycloak URL : $KEYCLOAK_URL"
+echo "Domain       : $GXP_DOMAIN"
+echo "Realm file   : $REALM_FILE"
+echo ""
+
+if [[ ! -f "$REALM_FILE" ]]; then
+  echo "ERROR: Realm file not found: $REALM_FILE"
+  exit 1
+fi
+
+echo "Step 1/2 — Obtaining admin token..."
 
 # shellcheck disable=SC2086
-RESPONSE=$(curl -k -sf -L -X POST "$KEYCLOAK_URL/realms/master/protocol/openid-connect/token" \
+RESPONSE=$(curl -sf -X POST "$KEYCLOAK_URL/realms/master/protocol/openid-connect/token" \
   $CURL_OPTS \
   -d "client_id=admin-cli" \
   -d "username=$ADMIN_USER" \
@@ -31,7 +41,7 @@ RESPONSE=$(curl -k -sf -L -X POST "$KEYCLOAK_URL/realms/master/protocol/openid-c
   -d "grant_type=password" 2>&1) || {
   echo "ERROR: curl failed — is Keycloak reachable at $KEYCLOAK_URL?"
   echo "  Check: docker compose ps keycloak"
-  echo "  Check: ${GXP_DOMAIN%%.*} entries in /etc/hosts"
+  echo "  Check: /etc/hosts has an entry for keycloak.${GXP_DOMAIN}"
   exit 1
 }
 
@@ -42,27 +52,39 @@ if [[ -z "$TOKEN" || "$TOKEN" == "null" ]]; then
   echo "Response: $RESPONSE"
   exit 1
 fi
+echo "Token obtained."
 
-echo "Importing GXP realm..."
+echo ""
+echo "Step 2/2 — Importing gxp-platform realm to $KEYCLOAK_URL/admin/realms ..."
 
-# Substitute {gxp_domain} placeholder before uploading
+# Substitute {gxp_domain} placeholder before uploading.
 REALM_PAYLOAD=$(sed "s/{gxp_domain}/${GXP_DOMAIN}/g" "$REALM_FILE")
 
+# Write to a temp file so curl reads the full body (avoids stdin-consumed-by-redirect issues).
+TMPFILE=$(mktemp /tmp/gxp-realm-XXXXXX.json)
+trap 'rm -f "$TMPFILE"' EXIT
+printf '%s' "$REALM_PAYLOAD" > "$TMPFILE"
+
 # shellcheck disable=SC2086
-HTTP_CODE=$(echo "$REALM_PAYLOAD" | curl -s -L -o /dev/null -w "%{http_code}" \
+BODY=$(curl -s -w "\n__HTTP_CODE__:%{http_code}" \
   -X POST "$KEYCLOAK_URL/admin/realms" \
   -H "Authorization: Bearer $TOKEN" \
   -H "Content-Type: application/json" \
   $CURL_OPTS \
-  --data-binary @-)
+  --data-binary "@$TMPFILE")
+
+HTTP_CODE=$(printf '%s' "$BODY" | grep -o '__HTTP_CODE__:[0-9]*' | cut -d: -f2)
+BODY_TEXT=$(printf '%s' "$BODY" | sed '/^__HTTP_CODE__:/d')
 
 if [[ "$HTTP_CODE" == "201" ]]; then
-  echo "Realm import complete (HTTP $HTTP_CODE)."
+  echo "Realm imported successfully (HTTP 201)."
 elif [[ "$HTTP_CODE" == "409" ]]; then
   echo "Realm already exists (HTTP 409) — skipping import."
 else
-  echo "ERROR: Realm import returned HTTP $HTTP_CODE."
+  echo "ERROR: Realm import returned HTTP ${HTTP_CODE:-000}."
+  echo "Response body: $BODY_TEXT"
   exit 1
 fi
 
-echo "Done. Visit $KEYCLOAK_URL/admin to verify."
+echo ""
+echo "Done. Admin console: $KEYCLOAK_URL/admin"
