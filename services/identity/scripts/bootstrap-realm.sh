@@ -23,7 +23,7 @@ echo "Domain: ${GXP_DOMAIN}"
 echo "Obtaining admin token from $KEYCLOAK_URL ..."
 
 # shellcheck disable=SC2086
-RESPONSE=$(curl -sf -L -X POST "$KEYCLOAK_URL/realms/master/protocol/openid-connect/token" \
+RESPONSE=$(curl -k -sf -L -X POST "$KEYCLOAK_URL/realms/master/protocol/openid-connect/token" \
   $CURL_OPTS \
   -d "client_id=admin-cli" \
   -d "username=$ADMIN_USER" \
