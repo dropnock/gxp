@@ -630,6 +630,7 @@ services:
 networks:
   gxp-net:
     driver: bridge
+    name: gxp-net  # pin name so Traefik's network: gxp-net matches
 
 volumes:
   postgres-tenant-data:
