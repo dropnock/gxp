@@ -555,6 +555,7 @@ services:
       args:
         VITE_KEYCLOAK_URL: https://keycloak.${GXP_DOMAIN:-gxp.localhost}
         VITE_API_BASE_URL: https://api.${GXP_DOMAIN:-gxp.localhost}
+        VITE_KEYCLOAK_REALM: ${PORTAL_KEYCLOAK_REALM:-gxp-platform}
     restart: unless-stopped
     networks:
       - gxp-net
