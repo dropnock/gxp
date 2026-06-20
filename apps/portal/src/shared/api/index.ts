@@ -3,7 +3,7 @@ import { getAuthHeader } from "../auth";
 // Empty string → same-origin (works with Vite proxy in dev and nginx in prod).
 // Set VITE_API_BASE_URL to a full origin (e.g. https://api.testserver.internal)
 // when the API lives on a different host than the portal.
-const API_BASE = (import.meta.env.VITE_API_BASE_URL as string) ?? "";
+export const API_BASE = (import.meta.env.VITE_API_BASE_URL as string) ?? "";
 
 export async function apiFetch(
   path: string,

@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { useDocuments, useDeleteDocument, Document } from "../hooks/useDocuments";
 import { getAuthHeader } from "../../../shared/auth";
+import { API_BASE } from "../../../shared/api";
 
 interface Props {
   folderId: string | null;
@@ -24,7 +25,7 @@ export function DocumentList({ folderId }: Props) {
   if (!docs?.length) return <p style={{ color: "#888", fontSize: 13 }}>No documents in this folder.</p>;
 
   function handleDownload(doc: Document) {
-    const url = `/api/v1/documents/${doc.id}/download`;
+    const url = `${API_BASE}/api/v1/documents/${doc.id}/download`;
     // Fetch with auth header, then follow the presigned redirect
     fetch(url, { headers: getAuthHeader(), redirect: "follow" })
       .then((r) => r.url || url)
