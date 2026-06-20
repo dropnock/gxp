@@ -33,12 +33,12 @@ http:
       tls: {}
       service: tenant-service
 
-    # app-service:
-    #   rule: "Host(`api.${GXP_DOMAIN}`) && PathPrefix(`/api/v1/apps`)"
-    #   entryPoints: [websecure]
-    #   middlewares: [secure-headers, rate-limit]
-    #   tls: {}
-    #   service: app-service
+    app-service:
+      rule: "Host(`api.${GXP_DOMAIN}`) && PathPrefix(`/api/v1/apps`)"
+      entryPoints: [websecure]
+      middlewares: [secure-headers, rate-limit]
+      tls: {}
+      service: app-service
 
     # workflow-service:
     #   rule: "Host(`api.${GXP_DOMAIN}`) && PathPrefix(`/api/v1/workflow`)"
@@ -94,10 +94,10 @@ http:
         servers:
           - url: "http://tenant-service:8000"
 
-    # app-service:
-    #   loadBalancer:
-    #     servers:
-    #       - url: "http://app-service:8000"
+    app-service:
+      loadBalancer:
+        servers:
+          - url: "http://app-service:8000"
 
     # workflow-service:
     #   loadBalancer:
