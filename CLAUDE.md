@@ -36,7 +36,10 @@ cp infra/docker/.env.example infra/docker/.env
 infra/scripts/gen-certs.sh
 # Import infra/docker/certs/tls.crt into your OS/browser trust store to avoid warnings.
 
-# 3. Start the full dev stack (includes portal + runtime containers)
+# 3. Generate Traefik route config (run again if GXP_DOMAIN changes)
+infra/scripts/gen-traefik-config.sh
+
+# 4. Start the full dev stack (includes portal + runtime containers)
 cd infra/docker && docker compose up -d
 
 # 4. Bootstrap Keycloak realm (first time only)

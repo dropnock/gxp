@@ -20,8 +20,6 @@ services:
   traefik:
     image: traefik:v3.3
     restart: unless-stopped
-    environment:
-      DOCKER_API_VERSION: "1.45"
     ports:
       - "80:80"
       - "443:443"
@@ -29,7 +27,6 @@ services:
     volumes:
       - ../../services/gateway/traefik.yml:/etc/traefik/traefik.yml:ro
       - ../../services/gateway/dynamic:/etc/traefik/dynamic:ro
-      - /var/run/docker.sock:/var/run/docker.sock:ro
       - ./certs:/etc/traefik/certs:ro
     networks:
       - gxp-net

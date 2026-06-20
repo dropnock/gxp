@@ -19,9 +19,6 @@ entryPoints:
     address: ":443"
 
 providers:
-  docker:
-    exposedByDefault: false
-    network: gxp-net
   file:
     directory: /etc/traefik/dynamic
     watch: true

@@ -38,3 +38,6 @@ Thumbs.db
 build/
 *.whl
 *.tar.gz
+
+# Generated Traefik router config (rendered from routers.tmpl.yml by gen-traefik-config.sh)
+services/gateway/dynamic/routers.yml

@@ -1,17 +1,24 @@
 http:
-  routers:
-    # All API traffic requires JWT auth
-    api-catchall:
-      rule: "HostRegexp(`api\\..*`) && PathPrefix(`/api/`)"
-      entryPoints:
-        - websecure
-      middlewares:
-        - secure-headers
-        - rate-limit
-      service: noop
-      tls: {}
+  middlewares:
+    jwt-auth:
+      forwardAuth:
+        address: "http://auth-checker:9000/verify"
+        authResponseHeaders:
+          - "X-User-Id"
+          - "X-User-Roles"
+          - "X-Request-Id"
 
-  services:
-    noop:
-      loadBalancer:
-        servers: []
+    secure-headers:
+      headers:
+        frameDeny: true
+        contentTypeNosniff: true
+        browserXssFilter: true
+        referrerPolicy: "strict-origin-when-cross-origin"
+        customResponseHeaders:
+          X-Powered-By: ""
+          Server: ""
+
+    rate-limit:
+      rateLimit:
+        average: 100
+        burst: 50
