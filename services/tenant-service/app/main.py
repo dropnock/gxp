@@ -21,6 +21,9 @@ app = FastAPI(
     version="0.1.0",
     description="Platform super-admin service for tenant lifecycle, cross-tenant grants, and catalog.",
     lifespan=lifespan,
+    docs_url="/api/v1/tenants/docs",
+    openapi_url="/api/v1/tenants/openapi.json",
+    redoc_url="/api/v1/tenants/redoc",
 )
 
 app.add_middleware(
@@ -39,5 +42,6 @@ app.include_router(v1_router, prefix="/api/v1")
 
 
 @app.get("/health")
+@app.get("/api/v1/tenants/health")
 async def health():
     return {"status": "ok", "service": "tenant-service"}
