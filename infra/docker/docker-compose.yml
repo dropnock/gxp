@@ -75,16 +75,16 @@ services:
     networks:
       - gxp-net
 
-  # postgres-document:
-  #   <<: *postgres-common
-  #   environment:
-  #     POSTGRES_DB: gxp_documents
-  #     POSTGRES_USER: postgres
-  #     POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
-  #   volumes:
-  #     - postgres-document-data:/var/lib/postgresql/data
-  #   networks:
-  #     - gxp-net
+  postgres-document:
+    <<: *postgres-common
+    environment:
+      POSTGRES_DB: gxp_documents
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+    volumes:
+      - postgres-document-data:/var/lib/postgresql/data
+    networks:
+      - gxp-net
 
   postgres-audit:
     <<: *postgres-common
@@ -190,30 +190,31 @@ services:
   #     timeout: 10s
   #     retries: 5
 
-  # clamav:
-  #   image: clamav/clamav:1.4
-  #   restart: unless-stopped
-  #   volumes:
-  #     - clamav-data:/var/lib/clamav
-  #   networks:
-  #     - gxp-net
-  #   healthcheck:
-  #     test: ["CMD", "clamdcheck.sh"]
-  #     interval: 60s
-  #     timeout: 10s
-  #     retries: 3
+  clamav:
+    image: clamav/clamav:1.4
+    restart: unless-stopped
+    volumes:
+      - clamav-data:/var/lib/clamav
+    networks:
+      - gxp-net
+    healthcheck:
+      test: ["CMD", "clamdcheck.sh"]
+      interval: 60s
+      timeout: 10s
+      retries: 5
+      start_period: 300s
 
-  # tika:
-  #   image: apache/tika:2.9.2.1-full
-  #   restart: unless-stopped
-  #   networks:
-  #     - gxp-net
-  #   healthcheck:
-  #     test: ["CMD-SHELL", "curl -sf http://localhost:9998/tika || exit 1"]
-  #     interval: 30s
-  #     timeout: 10s
-  #     retries: 10
-  #     start_period: 120s
+  tika:
+    image: apache/tika:2.9.2.1-full
+    restart: unless-stopped
+    networks:
+      - gxp-net
+    healthcheck:
+      test: ["CMD-SHELL", "curl -sf http://localhost:9998/tika || exit 1"]
+      interval: 30s
+      timeout: 10s
+      retries: 10
+      start_period: 120s
 
   # ── Application Services ──────────────────────────────────────────────────────
 
@@ -399,71 +400,63 @@ services:
     networks:
       - gxp-net
 
-  # document-service:
-  #   build:
-  #     context: ../..
-  #     dockerfile: services/document-service/Dockerfile
-  #   restart: unless-stopped
-  #   environment:
-  #     <<: *common-env
-  #     DATABASE_URL: postgresql+asyncpg://postgres:${POSTGRES_PASSWORD}@postgres-document:5432/gxp_documents
-  #     VALKEY_URL: redis://:${VALKEY_PASSWORD}@valkey:6379/3
-  #     CELERY_BROKER_URL: redis://:${VALKEY_PASSWORD}@valkey:6379/3
-  #     MINIO_ENDPOINT: minio:9000
-  #     MINIO_ACCESS_KEY: ${MINIO_ROOT_USER}
-  #     MINIO_SECRET_KEY: ${MINIO_ROOT_PASSWORD}
-  #     CLAMAV_HOST: clamav
-  #     CLAMAV_PORT: "3310"
-  #     OPENSEARCH_URL: http://opensearch:9200
-  #     TIKA_URL: http://tika:9998
-  #     CLIENT_ID: gxp-document-service
-  #     CLIENT_SECRET: ${DOCUMENT_SERVICE_CLIENT_SECRET}
-  #     TENANT_SERVICE_DB_URL: postgresql+asyncpg://postgres:${POSTGRES_PASSWORD}@postgres-tenant:5432/gxp_tenant
-  #   depends_on:
-  #     postgres-document:
-  #       condition: service_healthy
-  #     valkey:
-  #       condition: service_healthy
-  #     minio:
-  #       condition: service_healthy
-  #   networks:
-  #     - gxp-net
-  #   labels:
-  #     - "traefik.enable=true"
-  #     - "traefik.http.routers.document-service.rule=Host(`api.${GXP_DOMAIN:-gxp.localhost}`) && PathPrefix(`/api/v1/documents`)"
-  #     - "traefik.http.routers.document-service.entrypoints=websecure"
-  #     - "traefik.http.routers.document-service.tls=true"
-  #     - "traefik.http.services.document-service.loadbalancer.server.port=8000"
+  document-service:
+    build:
+      context: ../..
+      dockerfile: services/document-service/Dockerfile
+    restart: unless-stopped
+    environment:
+      <<: *common-env
+      DATABASE_URL: postgresql+asyncpg://postgres:${POSTGRES_PASSWORD}@postgres-document:5432/gxp_documents
+      VALKEY_URL: redis://:${VALKEY_PASSWORD}@valkey:6379/3
+      CELERY_BROKER_URL: redis://:${VALKEY_PASSWORD}@valkey:6379/3
+      MINIO_ENDPOINT: minio:9000
+      MINIO_ACCESS_KEY: ${MINIO_ROOT_USER}
+      MINIO_SECRET_KEY: ${MINIO_ROOT_PASSWORD}
+      CLAMAV_HOST: clamav
+      CLAMAV_PORT: "3310"
+      TIKA_URL: http://tika:9998
+      CLIENT_ID: gxp-document-service
+      CLIENT_SECRET: ${DOCUMENT_SERVICE_CLIENT_SECRET}
+      TENANT_SERVICE_DB_URL: postgresql+asyncpg://postgres:${POSTGRES_PASSWORD}@postgres-tenant:5432/gxp_tenant
+    depends_on:
+      postgres-document:
+        condition: service_healthy
+      valkey:
+        condition: service_healthy
+      minio:
+        condition: service_healthy
+    networks:
+      - gxp-net
 
-  # document-worker:
-  #   build:
-  #     context: ../..
-  #     dockerfile: services/document-service/Dockerfile
-  #   restart: unless-stopped
-  #   command: ["celery", "-A", "app.worker.celery_app", "worker", "--loglevel=info", "-Q", "document"]
-  #   environment:
-  #     <<: *common-env
-  #     DATABASE_URL: postgresql+asyncpg://postgres:${POSTGRES_PASSWORD}@postgres-document:5432/gxp_documents
-  #     VALKEY_URL: redis://:${VALKEY_PASSWORD}@valkey:6379/3
-  #     CELERY_BROKER_URL: redis://:${VALKEY_PASSWORD}@valkey:6379/3
-  #     MINIO_ENDPOINT: minio:9000
-  #     MINIO_ACCESS_KEY: ${MINIO_ROOT_USER}
-  #     MINIO_SECRET_KEY: ${MINIO_ROOT_PASSWORD}
-  #     CLAMAV_HOST: clamav
-  #     CLAMAV_PORT: "3310"
-  #     OPENSEARCH_URL: http://opensearch:9200
-  #     TIKA_URL: http://tika:9998
-  #     CLIENT_ID: gxp-document-service
-  #     CLIENT_SECRET: ${DOCUMENT_SERVICE_CLIENT_SECRET}
-  #   depends_on:
-  #     postgres-document:
-  #       condition: service_healthy
-  #     valkey:
-  #       condition: service_healthy
-  #     clamav:
-  #       condition: service_healthy
-  #   networks:
-  #     - gxp-net
+  document-worker:
+    build:
+      context: ../..
+      dockerfile: services/document-service/Dockerfile
+    restart: unless-stopped
+    command: ["celery", "-A", "app.worker.celery_app", "worker", "--loglevel=info", "-Q", "document"]
+    environment:
+      <<: *common-env
+      DATABASE_URL: postgresql+asyncpg://postgres:${POSTGRES_PASSWORD}@postgres-document:5432/gxp_documents
+      VALKEY_URL: redis://:${VALKEY_PASSWORD}@valkey:6379/3
+      CELERY_BROKER_URL: redis://:${VALKEY_PASSWORD}@valkey:6379/3
+      MINIO_ENDPOINT: minio:9000
+      MINIO_ACCESS_KEY: ${MINIO_ROOT_USER}
+      MINIO_SECRET_KEY: ${MINIO_ROOT_PASSWORD}
+      CLAMAV_HOST: clamav
+      CLAMAV_PORT: "3310"
+      TIKA_URL: http://tika:9998
+      CLIENT_ID: gxp-document-service
+      CLIENT_SECRET: ${DOCUMENT_SERVICE_CLIENT_SECRET}
+    depends_on:
+      postgres-document:
+        condition: service_healthy
+      valkey:
+        condition: service_healthy
+      clamav:
+        condition: service_healthy
+    networks:
+      - gxp-net
 
   audit-service:
     build:

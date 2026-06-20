@@ -54,12 +54,12 @@ http:
       tls: {}
       service: case-service
 
-    # document-service:
-    #   rule: "Host(`api.${GXP_DOMAIN}`) && PathPrefix(`/api/v1/documents`)"
-    #   entryPoints: [websecure]
-    #   middlewares: [secure-headers, rate-limit]
-    #   tls: {}
-    #   service: document-service
+    document-service:
+      rule: "Host(`api.${GXP_DOMAIN}`) && PathPrefix(`/api/v1/documents`)"
+      entryPoints: [websecure]
+      middlewares: [secure-headers, rate-limit]
+      tls: {}
+      service: document-service
 
     audit-service:
       rule: "Host(`api.${GXP_DOMAIN}`) && PathPrefix(`/api/v1/audit`)"
@@ -109,10 +109,10 @@ http:
         servers:
           - url: "http://case-service:8000"
 
-    # document-service:
-    #   loadBalancer:
-    #     servers:
-    #       - url: "http://document-service:8000"
+    document-service:
+      loadBalancer:
+        servers:
+          - url: "http://document-service:8000"
 
     audit-service:
       loadBalancer:
