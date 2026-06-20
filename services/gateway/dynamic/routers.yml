@@ -1,24 +1,132 @@
 http:
-  middlewares:
-    jwt-auth:
-      forwardAuth:
-        address: "http://auth-checker:9000/verify"
-        authResponseHeaders:
-          - "X-User-Id"
-          - "X-User-Roles"
-          - "X-Request-Id"
+  routers:
+    keycloak:
+      rule: "Host(`keycloak.gxp.localhost`)"
+      entryPoints: [websecure]
+      tls: {}
+      service: keycloak
 
-    secure-headers:
-      headers:
-        frameDeny: true
-        contentTypeNosniff: true
-        browserXssFilter: true
-        referrerPolicy: "strict-origin-when-cross-origin"
-        customResponseHeaders:
-          X-Powered-By: ""
-          Server: ""
+    # Uncomment each block as its service is brought up
 
-    rate-limit:
-      rateLimit:
-        average: 100
-        burst: 50
+    portal:
+      rule: "Host(`portal.gxp.localhost`)"
+      entryPoints: [websecure]
+      tls: {}
+      service: portal
+
+    runtime:
+      rule: "Host(`runtime.gxp.localhost`)"
+      entryPoints: [websecure]
+      tls: {}
+      service: runtime
+
+    minio-console:
+      rule: "Host(`minio.gxp.localhost`)"
+      entryPoints: [websecure]
+      tls: {}
+      service: minio-console
+
+    tenant-service:
+      rule: "Host(`api.gxp.localhost`) && PathPrefix(`/api/v1/tenants`)"
+      entryPoints: [websecure]
+      middlewares: [secure-headers, rate-limit]
+      tls: {}
+      service: tenant-service
+
+    app-service:
+      rule: "Host(`api.gxp.localhost`) && PathPrefix(`/api/v1/apps`)"
+      entryPoints: [websecure]
+      middlewares: [secure-headers, rate-limit]
+      tls: {}
+      service: app-service
+
+    workflow-service:
+      rule: "Host(`api.gxp.localhost`) && PathPrefix(`/api/v1/workflow`)"
+      entryPoints: [websecure]
+      middlewares: [secure-headers, rate-limit]
+      tls: {}
+      service: workflow-service
+
+    case-service:
+      rule: "Host(`api.gxp.localhost`) && PathPrefix(`/api/v1/cases`)"
+      entryPoints: [websecure]
+      middlewares: [secure-headers, rate-limit]
+      tls: {}
+      service: case-service
+
+    document-service:
+      rule: "Host(`api.gxp.localhost`) && PathPrefix(`/api/v1/documents`)"
+      entryPoints: [websecure]
+      middlewares: [secure-headers, rate-limit]
+      tls: {}
+      service: document-service
+
+    audit-service:
+      rule: "Host(`api.gxp.localhost`) && PathPrefix(`/api/v1/audit`)"
+      entryPoints: [websecure]
+      middlewares: [secure-headers, rate-limit]
+      tls: {}
+      service: audit-service
+
+    notification-service:
+      rule: "Host(`api.gxp.localhost`) && PathPrefix(`/api/v1/notifications`)"
+      entryPoints: [websecure]
+      middlewares: [secure-headers, rate-limit]
+      tls: {}
+      service: notification-service
+
+  services:
+    keycloak:
+      loadBalancer:
+        servers:
+          - url: "http://keycloak:8080"
+
+    portal:
+      loadBalancer:
+        servers:
+          - url: "http://portal:80"
+
+    runtime:
+      loadBalancer:
+        servers:
+          - url: "http://runtime:80"
+
+    minio-console:
+      loadBalancer:
+        servers:
+          - url: "http://minio:9001"
+
+    tenant-service:
+      loadBalancer:
+        servers:
+          - url: "http://tenant-service:8000"
+
+    app-service:
+      loadBalancer:
+        servers:
+          - url: "http://app-service:8000"
+
+    workflow-service:
+      loadBalancer:
+        servers:
+          - url: "http://workflow-service:8000"
+
+    case-service:
+      loadBalancer:
+        servers:
+          - url: "http://case-service:8000"
+
+    document-service:
+      loadBalancer:
+        servers:
+          - url: "http://document-service:8000"
+
+    audit-service:
+      loadBalancer:
+        servers:
+          - url: "http://audit-service:8000"
+
+    notification-service:
+      loadBalancer:
+        servers:
+          - url: "http://notification-service:8000"
