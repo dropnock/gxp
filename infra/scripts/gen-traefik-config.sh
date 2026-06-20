@@ -9,7 +9,7 @@ set -euo pipefail
 
 SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
 ENV_FILE="$SCRIPT_DIR/../docker/.env"
-TMPL="$SCRIPT_DIR/../../services/gateway/dynamic/routers.tmpl.yml"
+TMPL="$SCRIPT_DIR/../../services/gateway/routers.tmpl.yml"
 OUT="$SCRIPT_DIR/../../services/gateway/dynamic/routers.yml"
 
 # Load .env if present so GXP_DOMAIN is available
