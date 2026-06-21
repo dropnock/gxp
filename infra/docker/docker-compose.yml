@@ -416,6 +416,7 @@ services:
       CLAMAV_HOST: clamav
       CLAMAV_PORT: "3310"
       TIKA_URL: http://tika:9998
+      KEYCLOAK_URL: http://keycloak:8080
       CLIENT_ID: gxp-document-service
       CLIENT_SECRET: ${DOCUMENT_SERVICE_CLIENT_SECRET}
       TENANT_SERVICE_DB_URL: postgresql+asyncpg://postgres:${POSTGRES_PASSWORD}@postgres-tenant:5432/gxp_tenant
@@ -446,6 +447,7 @@ services:
       CLAMAV_HOST: clamav
       CLAMAV_PORT: "3310"
       TIKA_URL: http://tika:9998
+      KEYCLOAK_URL: http://keycloak:8080
       CLIENT_ID: gxp-document-service
       CLIENT_SECRET: ${DOCUMENT_SERVICE_CLIENT_SECRET}
     depends_on:

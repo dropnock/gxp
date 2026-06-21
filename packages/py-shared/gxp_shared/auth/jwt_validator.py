@@ -7,10 +7,18 @@ without any configuration change.
 
 Never calls Keycloak at request time — critical for air-gap resilience.
 JWKS clients are refreshed every hour.
+
+KEYCLOAK_INTERNAL_URL (optional env var): when set, the scheme+host of the
+JWKS fetch URL is rewritten to this base (e.g. http://keycloak:8080). The
+realm path from the iss claim is preserved. Use this when services run
+behind a reverse proxy with a self-signed cert — the public iss URL is kept
+for JWT validation while the JWKS fetch uses the trusted internal endpoint.
 """
 from __future__ import annotations
 
+import os
 import time
+from urllib.parse import urlparse, urlunparse
 from typing import Any
 
 import jwt as pyjwt
@@ -21,13 +29,32 @@ _JWKS_TTL = 3600  # seconds between JWKS refreshes
 # { issuer_url: (PyJWKClient, fetched_at_timestamp) }
 _clients: dict[str, tuple[PyJWKClient, float]] = {}
 
+# When set, JWKS fetches use this base URL instead of the public iss hostname.
+# Allows services to reach Keycloak internally without trusting the TLS cert.
+_KEYCLOAK_INTERNAL_URL: str | None = os.environ.get("KEYCLOAK_INTERNAL_URL") or os.environ.get("KEYCLOAK_URL")
+
+
+def _jwks_uri_for_issuer(issuer: str) -> str:
+    """
+    Build the JWKS endpoint URL for a given issuer.
+    If KEYCLOAK_INTERNAL_URL / KEYCLOAK_URL is set, the scheme and host are
+    replaced with the internal base so that self-signed certs are bypassed
+    while the realm path (and the iss claim used for validation) are unchanged.
+    """
+    certs_path = f"{issuer.rstrip('/')}/protocol/openid-connect/certs"
+    if _KEYCLOAK_INTERNAL_URL:
+        internal = urlparse(_KEYCLOAK_INTERNAL_URL)
+        public = urlparse(certs_path)
+        certs_path = urlunparse(public._replace(scheme=internal.scheme, netloc=internal.netloc))
+    return certs_path
+
 
 def _get_jwks_client(issuer: str) -> PyJWKClient:
     """Return a cached PyJWKClient for the given Keycloak realm issuer URL."""
     now = time.monotonic()
     entry = _clients.get(issuer)
     if entry is None or (now - entry[1]) > _JWKS_TTL:
-        jwks_uri = f"{issuer.rstrip('/')}/protocol/openid-connect/certs"
+        jwks_uri = _jwks_uri_for_issuer(issuer)
         client = PyJWKClient(jwks_uri, cache_keys=True)
         _clients[issuer] = (client, now)
     return _clients[issuer][0]
