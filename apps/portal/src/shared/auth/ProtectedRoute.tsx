@@ -1,8 +1,5 @@
-/**
- * ProtectedRoute — redirects to Keycloak login if the user is not authenticated.
- * Shows a loading spinner while keycloak-js is initializing.
- */
 import { ReactNode } from "react";
+import { Lock, ShieldOff } from "lucide-react";
 import { useAuth } from "./AuthContext";
 
 interface Props {
@@ -14,23 +11,42 @@ export function ProtectedRoute({ children, roles }: Props) {
   const { isLoading, isAuthenticated, login, userRoles } = useAuth();
 
   if (isLoading) {
-    return <div style={{ padding: 32, textAlign: "center" }}>Loading…</div>;
+    return (
+      <div className="auth-gate">
+        <div className="spinner" role="status" aria-label="Authenticating" />
+      </div>
+    );
   }
 
   if (!isAuthenticated) {
     return (
-      <div style={{ padding: 32, textAlign: "center" }}>
-        <p>You must be signed in to access this page.</p>
-        <button onClick={login}>Sign In</button>
+      <div className="auth-gate">
+        <div className="auth-gate__icon auth-gate__icon--blue">
+          <Lock size={24} aria-hidden="true" />
+        </div>
+        <h1 className="auth-gate__title">Sign in required</h1>
+        <p className="auth-gate__body">
+          You need to be signed in to access this page.
+        </p>
+        <button onClick={login} className="btn btn--primary">
+          Sign In
+        </button>
       </div>
     );
   }
 
   if (roles && !roles.some((r) => userRoles.includes(r))) {
     return (
-      <div style={{ padding: 32, textAlign: "center", color: "#dc2626" }}>
-        <p>You do not have permission to access this page.</p>
-        <p style={{ fontSize: 13, color: "#6b7280" }}>Required roles: {roles.join(", ")}</p>
+      <div className="auth-gate">
+        <div className="auth-gate__icon auth-gate__icon--red">
+          <ShieldOff size={24} aria-hidden="true" />
+        </div>
+        <h1 className="auth-gate__title">Access denied</h1>
+        <p className="auth-gate__body">
+          You do not have the required role to access this page. Contact your
+          administrator if you believe this is incorrect.
+        </p>
+        <p className="auth-gate__meta">Required: {roles.join(", ")}</p>
       </div>
     );
   }

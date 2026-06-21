@@ -1,8 +1,5 @@
-/**
- * PlatformRoute — restricts access to platform super-admins.
- * Users authenticated against a tenant realm (not gxp-platform) get a 403 page.
- */
 import { ReactNode } from "react";
+import { ShieldOff } from "lucide-react";
 import { useAuth } from "./AuthContext";
 import { ProtectedRoute } from "./ProtectedRoute";
 
@@ -23,9 +20,15 @@ function PlatformGuard({ children }: Props) {
 
   if (!isPlatformAdmin) {
     return (
-      <div style={{ padding: 32, textAlign: "center" }}>
-        <h2>Access Denied</h2>
-        <p>This section requires platform administrator privileges.</p>
+      <div className="auth-gate">
+        <div className="auth-gate__icon auth-gate__icon--red">
+          <ShieldOff size={24} aria-hidden="true" />
+        </div>
+        <h1 className="auth-gate__title">Platform access only</h1>
+        <p className="auth-gate__body">
+          This section is restricted to platform administrators and cannot be
+          accessed from a tenant account.
+        </p>
       </div>
     );
   }

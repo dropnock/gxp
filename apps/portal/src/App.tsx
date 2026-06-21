@@ -8,24 +8,26 @@ import { CaseManagerPage } from "./features/case-manager";
 import { AppBuilderPage } from "./features/app-builder";
 import { AuditPage } from "./features/audit";
 import { ProtectedRoute, PlatformRoute } from "./shared/auth";
-import { NavBar } from "./shared/components/NavBar";
+import { NavBar, SystemNotices } from "./shared/components";
+import { LandingPage } from "./pages/LandingPage";
 
 export default function App() {
   return (
     <>
       <NavBar />
+      <SystemNotices />
       <Routes>
-        <Route path="/" element={<div style={{ padding: 32 }}>GXP Portal</div>} />
+        {/* Public */}
+        <Route path="/" element={<LandingPage />} />
 
-        {/* Tenant-authenticated routes */}
-        <Route path="/apps/*"          element={<ProtectedRoute><AppBuilderPage /></ProtectedRoute>} />
-        <Route path="/workflows/*"    element={<ProtectedRoute><WorkflowEditorPage /></ProtectedRoute>} />
-        <Route path="/cases/*"         element={<ProtectedRoute><CaseManagerPage /></ProtectedRoute>} />
-        <Route path="/documents"      element={<ProtectedRoute><DocumentManagerPage /></ProtectedRoute>} />
-        <Route path="/audit/*"        element={<ProtectedRoute roles={["gxp-auditor", "gxp-admin"]}><AuditPage /></ProtectedRoute>} />
-        <Route path="/admin"          element={<ProtectedRoute><div>Admin</div></ProtectedRoute>} />
+        {/* Tenant-authenticated */}
+        <Route path="/apps/*"      element={<ProtectedRoute><AppBuilderPage /></ProtectedRoute>} />
+        <Route path="/workflows/*" element={<ProtectedRoute><WorkflowEditorPage /></ProtectedRoute>} />
+        <Route path="/cases/*"     element={<ProtectedRoute><CaseManagerPage /></ProtectedRoute>} />
+        <Route path="/documents"   element={<ProtectedRoute><DocumentManagerPage /></ProtectedRoute>} />
+        <Route path="/audit/*"     element={<ProtectedRoute roles={["gxp-auditor", "gxp-admin"]}><AuditPage /></ProtectedRoute>} />
 
-        {/* Platform super-admin routes — require gxp-platform realm + gxp-platform-admin role */}
+        {/* Platform super-admin */}
         <Route path="/platform/tenants" element={<PlatformRoute><TenantListPage /></PlatformRoute>} />
         <Route path="/platform/catalog" element={<PlatformRoute><CatalogPage /></PlatformRoute>} />
         <Route path="/platform/grants"  element={<PlatformRoute><CrossTenantGrantsPage /></PlatformRoute>} />

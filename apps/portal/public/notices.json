@@ -1,0 +1,17 @@
+[
+  {
+    "id": "notice-example-1",
+    "type": "info",
+    "title": "Scheduled Maintenance",
+    "message": "The platform will be unavailable on Saturday 28 June 2026 from 02:00–04:00 UTC for routine maintenance. Plan accordingly.",
+    "active": false,
+    "expires": "2026-06-28T04:00:00Z"
+  },
+  {
+    "id": "notice-example-2",
+    "type": "warning",
+    "title": "Degraded Performance",
+    "message": "Document indexing is running slower than usual. Uploads will succeed but search results may be delayed by up to 30 minutes.",
+    "active": false
+  }
+]
